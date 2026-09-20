@@ -1,0 +1,14 @@
+{
+  "name": "BeVita",
+  "short_name": "BeVita",
+  "description": "Registro diario de macros, bienestar y composición corporal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f6f2",
+  "theme_color": "#1a1a18",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
