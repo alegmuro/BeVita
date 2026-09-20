@@ -2333,24 +2333,19 @@ async function renderDashboard(){
     bwCard=`<div class="today-card-icon">🙂</div><div class="today-card-title">Bienestar</div><div class="today-card-val">Sin registrar</div><div class="today-card-sub">${isViewingToday?'¿Cómo te sientes hoy? →':'Nada registrado ese día'}</div>`;
   }
 
-  // Balance calórico — Consumido (nutrición) menos Quemado (cargado a mano
-  // desde el reloj inteligente), comparado contra la meta de calorías.
-  // Va como tarjeta destacada (hero) arriba de todo, no como tile del grid
-  // — así coincide con el mockup ("Balance de hoy").
+  // Calorías restantes hoy — mismo cálculo que MyFitnessPal, a pedido
+  // explícito de la coach: Meta − Consumido + Quemado. El ejercicio se
+  // devuelve al presupuesto del día al 100%, sin descuento. Antes se
+  // mostraba un "balance neto" (consumido − quemado) con la meta aparte en
+  // un badge — este número ahora responde directo "¿cuánto me queda para
+  // comer hoy?", que es la pregunta que se hace la clienta a mitad del día.
   const consumido=todayRec?Math.round(todayRec.totals.cal||0):0;
-  let heroVal,heroSub,heroBadge;
-  if(todayRec||calBurnedVal!=null){
-    const quemado=calBurnedVal||0;
-    const balance=consumido-quemado;
-    const delta=Math.round(balance-TARGETS.cal);
-    heroVal=balance;
-    heroSub=`Consumido ${consumido} · Quemado ${quemado}`;
-    heroBadge=`<div class="hoy-hero-badge">${delta<0?'−':'+'}${Math.abs(delta)} vs meta</div>`;
-  }else{
-    heroVal='—';
-    heroSub='Consumo − gasto vs meta';
-    heroBadge='';
-  }
+  const quemado=calBurnedVal||0;
+  const meta=Math.round(Number(TARGETS.cal)||0);
+  const restantes=Math.round(meta-consumido+quemado);
+  const heroVal=restantes;
+  const heroSub=`Meta ${meta} · Comida ${consumido} · Ejercicio ${quemado}`;
+  const heroBadge=restantes<0?`<div class="hoy-hero-badge" style="background:#FF6B5B">${Math.abs(restantes)} kcal sobre tu meta</div>`:'';
   const firstName=((PROFILE.name||'').trim().split(' ')[0])||PROFILE.name||'';
   const dateLabel=formatDate(viewStr).replace(/ \d{4}$/,'').toUpperCase();
 
@@ -2385,7 +2380,7 @@ async function renderDashboard(){
     ${!isViewingToday?'<button class="btn-sm" onclick="dashGoToday()">Hoy</button>':''}
   </div>
   <div class="hoy-hero">
-    <div class="hoy-hero-label">Balance de hoy</div>
+    <div class="hoy-hero-label">Calorías restantes hoy</div>
     <div class="hoy-hero-num"><span class="val">${heroVal}</span><span class="unit">kcal</span></div>
     <div class="hoy-hero-foot"><span class="hoy-hero-sub">${heroSub}</span>${heroBadge}</div>
   </div>
