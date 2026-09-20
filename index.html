@@ -171,16 +171,27 @@ input[type=number]{text-align:center}
 .hoy-greet-sub{font-size:12.5px;color:#57545F;margin-top:2px}
 .hoy-avatar-btn{width:40px;height:40px;border-radius:50%;color:#fff;border:none;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;cursor:pointer;flex-shrink:0}
 .hoy-hero{background:#5B4FE9;border-radius:22px;padding:20px 20px 18px;display:flex;flex-direction:column;gap:10px;color:#fff;margin:14px 0}
-.hoy-hero-label{font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.78);text-transform:uppercase;letter-spacing:0.4px}
-.hoy-hero-num{display:flex;align-items:baseline;gap:8px}
+.hoy-hero-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.78);text-transform:uppercase;letter-spacing:0.4px}
+.hoy-hero-num{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
 .hoy-hero-num .val{font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:700;color:#fff;line-height:1}
-.hoy-hero-num .unit{font-size:14px;font-weight:600;color:rgba(255,255,255,0.78)}
+.hoy-hero-num .unit{font-size:13px;font-weight:600;color:rgba(255,255,255,0.78)}
 .hoy-hero-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .hoy-hero-sub{font-size:12px;color:rgba(255,255,255,0.85)}
-.hoy-hero-badge{background:rgba(255,255,255,0.16);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;color:#fff}
-.hoy-hero-net{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid rgba(255,255,255,0.18);font-size:11.5px}
-.hoy-hero-net-label{color:rgba(255,255,255,0.68);font-weight:600;text-transform:uppercase;letter-spacing:0.3px;font-size:10px}
-.hoy-hero-net-val{color:#fff;font-weight:600}
+/* Dos indicadores lado a lado, mismo tamaño — "Puedes comer hasta" y
+   "Balance neto de hoy" a pedido de la coach, para que ambos pesen igual
+   visualmente en vez de uno grande y otro chico como antes. */
+.hoy-hero-cols{display:flex;gap:14px}
+.hoy-hero-col{flex:1;min-width:0}
+.hoy-hero-cols .hoy-hero-num .val{font-size:30px}
+.hoy-hero-divider{width:1px;align-self:stretch;background:rgba(255,255,255,0.22)}
+.hoy-hero-net-caption{font-size:12px;color:rgba(255,255,255,0.85);padding-top:8px;border-top:1px solid rgba(255,255,255,0.18)}
+.food-search-wrap{position:relative}
+.food-search-input{width:100%}
+.food-search-results{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #E7E5EF;border-radius:8px;box-shadow:0 4px 16px rgba(23,23,26,0.12);max-height:220px;overflow-y:auto;z-index:20;margin-top:2px}
+.food-search-item{padding:8px 10px;font-size:12px;cursor:pointer;border-bottom:0.5px solid #F1EFF7}
+.food-search-item:hover{background:#F8F7FD}
+.food-search-item-sub{display:block;font-size:10px;color:#ADAAB8;margin-top:1px}
+.food-search-empty{padding:8px 10px;font-size:12px;color:#ADAAB8}
 .today-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
 .today-card{background:#F4F3F7;border-radius:12px;padding:12px 14px;cursor:pointer;transition:background 0.15s;border:none;text-align:left;font-family:inherit}
 .today-card:hover{background:#EDEBF5}
@@ -1852,7 +1863,11 @@ async function addRow(mealKey,data){
       <button class="btn-del" onclick="delRow(${id},'${mealKey}')">×</button>`;
   }else{
     div.innerHTML=`
-      <select id="sel-${id}" onchange="onFoodSelect(${id})">${foodOptions()}</select>
+      <div class="food-search-wrap">
+        <input type="text" id="fs-${id}" class="food-search-input" placeholder="Buscar alimento..." autocomplete="off"
+          oninput="foodSearchInput(${id},this.value)" onfocus="foodSearchInput(${id},this.value)" onblur="foodSearchBlur(${id})">
+        <div class="food-search-results" id="fsr-${id}" style="display:none"></div>
+      </div>
       <input type="number" id="g-${id}" placeholder="cant." min="0" step="0.1" oninput="calcFoodRow(${id})">
       <span class="cell-val" id="r-cal-${id}">—</span>
       <span class="cell-val" id="r-prot-${id}">—</span>
@@ -1866,14 +1881,53 @@ async function addRow(mealKey,data){
   scheduleAutosave();
 }
 
-function onFoodSelect(id){
-  const sel=document.getElementById('sel-'+id);
-  const gEl=document.getElementById('g-'+id);
-  if(!sel||!gEl)return;
-  const f=FOODS_CACHE&&FOODS_CACHE[sel.value];
-  if(f&&f.unit_label){gEl.placeholder=f.unit_label;gEl.title='Cantidad en unidades ('+f.unit_label+')';}
-  else{gEl.placeholder='g';gEl.title='Gramos';}
+// Buscador de alimentos con resultados en vivo — reemplaza el <select>
+// plano de antes, que se volvió imposible de usar en el celular apenas el
+// catálogo creció a cientos de alimentos (una lista nativa larguísima sin
+// forma de filtrar). El alimento elegido se guarda en data-food-name de la
+// fila (no en un <select>), así que calcFoodRow() y collectDayFromDom()
+// leen de ahí.
+function foodSearchInput(id,query){
+  const row=document.getElementById('frow-'+id);
+  if(row)delete row.dataset.foodName; // escribir de nuevo invalida la selección anterior, hasta que se elija otra vez de la lista
   calcFoodRow(id);
+  const box=document.getElementById('fsr-'+id);
+  if(!box)return;
+  const q=query.trim().toLowerCase();
+  if(!q||!FOODS_CACHE){box.style.display='none';box.innerHTML='';return;}
+  const matches=Object.keys(FOODS_CACHE).filter(n=>n.toLowerCase().includes(q)).sort((a,b)=>a.localeCompare(b,'es')).slice(0,40);
+  if(!matches.length){
+    box.innerHTML='<div class="food-search-empty">Sin resultados</div>';
+    box.style.display='block';
+    return;
+  }
+  box.innerHTML=matches.map(n=>{
+    const f=FOODS_CACHE[n];
+    const suffix=(f.unit_label&&f.unit_grams)?` — 1 ${f.unit_label} ≈ ${f.unit_grams}g`:'';
+    return `<div class="food-search-item" onmousedown="foodSearchPick(${id},'${n.replace(/'/g,"\\'")}')">${n}${suffix?`<span class="food-search-item-sub">${suffix}</span>`:''}</div>`;
+  }).join('');
+  box.style.display='block';
+}
+function foodSearchBlur(id){
+  // Delay corto para que el onmousedown del resultado se dispare ANTES de
+  // que el blur del input cierre la lista (si no, el clic nunca llega).
+  setTimeout(()=>{const box=document.getElementById('fsr-'+id);if(box)box.style.display='none';},150);
+}
+function foodSearchPick(id,name){
+  const input=document.getElementById('fs-'+id);
+  if(input)input.value=name;
+  const row=document.getElementById('frow-'+id);
+  if(row)row.dataset.foodName=name;
+  const box=document.getElementById('fsr-'+id);
+  if(box){box.style.display='none';box.innerHTML='';}
+  const f=FOODS_CACHE&&FOODS_CACHE[name];
+  const gEl=document.getElementById('g-'+id);
+  if(gEl){
+    if(f&&f.unit_label){gEl.placeholder=f.unit_label;gEl.title='Cantidad en unidades ('+f.unit_label+')';}
+    else{gEl.placeholder='g';gEl.title='Gramos';}
+  }
+  calcFoodRow(id);
+  if(gEl)gEl.focus();
 }
 
 function previewManual(){
@@ -1909,11 +1963,12 @@ function addManual(){
 }
 
 function calcFoodRow(id){
-  const sel=document.getElementById('sel-'+id);
-  const gEl=document.getElementById('g-'+id);
-  if(!sel||!gEl)return;
-  const f=FOODS_CACHE&&FOODS_CACHE[sel.value];const qty=parseFloat(gEl.value)||0;
   const row=document.getElementById('frow-'+id);
+  const gEl=document.getElementById('g-'+id);
+  if(!row||!gEl)return;
+  const foodName=row.dataset.foodName;
+  const f=foodName&&FOODS_CACHE?FOODS_CACHE[foodName]:null;
+  const qty=parseFloat(gEl.value)||0;
   const hintEl=document.getElementById('hint-'+id);
   const isUnitFood=!!(f&&f.unit_label&&f.unit_grams);
   if(hintEl){
@@ -1924,17 +1979,18 @@ function calcFoodRow(id){
   }
   if(!f||!qty){
     ['cal','prot','carb','fat'].forEach(m=>{const el=document.getElementById('r-'+m+'-'+id);if(el)el.textContent='—';});
-    if(row)delete row.dataset.label;
+    delete row.dataset.label;
+    // No se toca row.dataset.name aquí a propósito: mientras falte la
+    // cantidad, la fila se sigue tratando como incompleta (ver
+    // collectDayFromDom) para no guardar un alimento sin peso real.
   }else{
     const isUnit=isUnitFood;
     const grams=isUnit?qty*f.unit_grams:qty;
     const k=grams/100;
-    if(row){
-      row.dataset.name=sel.value;row.dataset.g=Math.round(grams);
-      row.dataset.cal=Math.round(f.cal*k);row.dataset.prot=(f.prot*k).toFixed(1);row.dataset.carb=(f.carb*k).toFixed(1);row.dataset.fat=(f.fat*k).toFixed(1);
-      if(isUnit)row.dataset.label=`${qty} ${f.unit_label}${qty!==1?'s':''} (${Math.round(grams)}g)`;
-      else delete row.dataset.label;
-    }
+    row.dataset.name=foodName;row.dataset.g=Math.round(grams);
+    row.dataset.cal=Math.round(f.cal*k);row.dataset.prot=(f.prot*k).toFixed(1);row.dataset.carb=(f.carb*k).toFixed(1);row.dataset.fat=(f.fat*k).toFixed(1);
+    if(isUnit)row.dataset.label=`${qty} ${f.unit_label}${qty!==1?'s':''} (${Math.round(grams)}g)`;
+    else delete row.dataset.label;
     const ec=document.getElementById('r-cal-'+id);if(ec)ec.textContent=Math.round(f.cal*k);
     const ep=document.getElementById('r-prot-'+id);if(ep)ep.textContent=(f.prot*k).toFixed(1)+'g';
     const ecr=document.getElementById('r-carb-'+id);if(ecr)ecr.textContent=(f.carb*k).toFixed(1)+'g';
@@ -2070,8 +2126,7 @@ function collectDayFromDom(){
         // completo y en silencio: si era la ÚNICA fila del día, "Guardar
         // día" terminaba BORRANDO lo que ya hubiera guardado en la nube
         // (rama de "día vacío" más abajo) y aun así mostraba "✓ Guardado".
-        const sel=row.querySelector('select');
-        if(sel&&sel.value)incomplete.push(sel.options[sel.selectedIndex]?.text||sel.value);
+        if(row.dataset.foodName)incomplete.push(row.dataset.foodName);
         return;
       }
       mealData[meal.key].push({name:row.dataset.name,g:row.dataset.g||null,label:row.dataset.label||null,cal:parseFloat(row.dataset.cal)||0,prot:parseFloat(row.dataset.prot)||0,carb:parseFloat(row.dataset.carb)||0,fat:parseFloat(row.dataset.fat)||0,manual:row.dataset.manual==='1'});
@@ -2353,13 +2408,14 @@ async function renderDashboard(){
   const meta=Math.round(Number(TARGETS.cal)||0);
   const restantes=Math.round(meta-consumido+quemado);
   const heroVal=restantes;
+  const heroValColor=restantes<0?'#FFB4A8':'#fff';
   const heroSub=`Meta ${meta} · Comida ${consumido} · Ejercicio ${quemado}`;
-  const heroBadge=restantes<0?`<div class="hoy-hero-badge" style="background:#FF6B5B">${Math.abs(restantes)} kcal sobre tu meta</div>`:'';
   const neto=Math.round(consumido-quemado);
   const netoDelta=Math.round(neto-meta);
-  const netoMsg=netoDelta===0?`${neto} kcal · en tu meta`
-    :netoDelta<0?`${neto} kcal · ${Math.abs(netoDelta)} kcal extra de déficit hoy 💪`
-    :`${neto} kcal · ${netoDelta} kcal por encima de tu meta`;
+  const netoColor=netoDelta===0?'#fff':netoDelta<0?'#8FEFD0':'#FFB4A8';
+  const netoCaption=netoDelta===0?'en tu meta'
+    :netoDelta<0?`${Math.abs(netoDelta)} kcal extra de déficit hoy 💪`
+    :`${netoDelta} kcal por encima de tu meta`;
   const firstName=((PROFILE.name||'').trim().split(' ')[0])||PROFILE.name||'';
   const dateLabel=formatDate(viewStr).replace(/ \d{4}$/,'').toUpperCase();
 
@@ -2394,10 +2450,19 @@ async function renderDashboard(){
     ${!isViewingToday?'<button class="btn-sm" onclick="dashGoToday()">Hoy</button>':''}
   </div>
   <div class="hoy-hero">
-    <div class="hoy-hero-label">Puedes comer hasta</div>
-    <div class="hoy-hero-num"><span class="val">${heroVal}</span><span class="unit">kcal</span></div>
-    <div class="hoy-hero-foot"><span class="hoy-hero-sub">${heroSub}</span>${heroBadge}</div>
-    <div class="hoy-hero-net"><span class="hoy-hero-net-label">Balance neto de hoy</span><span class="hoy-hero-net-val">${netoMsg}</span></div>
+    <div class="hoy-hero-cols">
+      <div class="hoy-hero-col">
+        <div class="hoy-hero-label">Puedes comer hasta</div>
+        <div class="hoy-hero-num"><span class="val" style="color:${heroValColor}">${heroVal}</span><span class="unit">kcal</span></div>
+      </div>
+      <div class="hoy-hero-divider"></div>
+      <div class="hoy-hero-col">
+        <div class="hoy-hero-label">Balance neto de hoy</div>
+        <div class="hoy-hero-num"><span class="val" style="color:${netoColor}">${neto}</span><span class="unit">kcal</span></div>
+      </div>
+    </div>
+    <div class="hoy-hero-foot"><span class="hoy-hero-sub">${heroSub}</span></div>
+    <div class="hoy-hero-net-caption">${netoCaption}</div>
   </div>
   <div class="today-grid">
     <button class="today-card${todayRec?'':' today-empty'}" onclick="showTab('nutricion')">${nutriCard}</button>
