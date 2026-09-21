@@ -1139,6 +1139,7 @@ function switchAccount(){
   // corre en ese caso. Para la coach sí queda siempre disponible.
   LS.del(LAST_PROFILE_KEY);
   pendingProfileId=null;
+  document.title='BeVita';
   hideAllScreens();
   showSelectScreen();
 }
@@ -1515,6 +1516,15 @@ function lockApp(){
 function enterApp(profile){
   PROFILE=profile||PROFILE;
   TARGETS=Object.assign({},PROFILE.targets);
+  // El título de la pestaña del navegador muestra qué perfil está activo —
+  // así, si hay varias pestañas abiertas (por ejemplo la coach revisando
+  // su propio seguimiento Y el de una clienta al mismo tiempo), se puede
+  // saber de un vistazo cuál es cuál sin tener que entrar a cada una. No se
+  // pone esto en la URL a propósito: la URL se limpia intencionalmente
+  // después de un link personal (ver getAutoProfileId) para que no quede
+  // expuesto el id/nombre de nadie en el historial del navegador o al
+  // compartir la pantalla.
+  document.title=`${PROFILE.name} — BeVita`;
   document.getElementById('header-dot').style.background=PROFILE.color;
   document.getElementById('header-name').textContent=PROFILE.name;
   const adminBtn=document.getElementById('admin-tab-btn');
