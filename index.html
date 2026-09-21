@@ -619,22 +619,22 @@ canvas{display:block;width:100%;max-width:100%}
   </div>
 
   <div class="nav">
-    <button class="nav-btn active" data-tab="hoy" onclick="showTab('hoy')">Hoy</button>
-    <button class="nav-btn" data-tab="nutricion" onclick="showTab('nutricion')">Nutrición</button>
-    <button class="nav-btn" data-tab="cuerpo" onclick="showTab('cuerpo')">Medidas</button>
-    <button class="nav-btn" data-tab="ejercicio" onclick="showTab('ejercicio')">Ejercicio</button>
-    <button class="nav-btn" data-tab="bienestar" onclick="showTab('bienestar')">Bienestar</button>
-    <button class="nav-btn" data-tab="tendencias" onclick="showTab('tendencias')">Tendencias</button>
+    <button class="nav-btn active client-only-nav" data-tab="hoy" onclick="showTab('hoy')">Hoy</button>
+    <button class="nav-btn client-only-nav" data-tab="nutricion" onclick="showTab('nutricion')">Nutrición</button>
+    <button class="nav-btn client-only-nav" data-tab="cuerpo" onclick="showTab('cuerpo')">Medidas</button>
+    <button class="nav-btn client-only-nav" data-tab="ejercicio" onclick="showTab('ejercicio')">Ejercicio</button>
+    <button class="nav-btn client-only-nav" data-tab="bienestar" onclick="showTab('bienestar')">Bienestar</button>
+    <button class="nav-btn client-only-nav" data-tab="tendencias" onclick="showTab('tendencias')">Tendencias</button>
     <button class="nav-btn" id="admin-tab-btn" data-tab="admin" style="display:none" onclick="showTab('admin')">👑 Clientes<span id="admin-pending-badge" style="display:none;margin-left:5px;background:#FF6B5B;color:#fff;border-radius:20px;padding:1px 6px;font-size:10px;font-weight:700"></span></button>
     <button class="gear-btn" id="gear-btn" onclick="showTab('ajustes')" title="Ajustes" aria-label="Ajustes">⚙</button>
   </div>
 
-  <nav class="bottom-nav" aria-label="Navegación principal">
-    <button type="button" class="nav-btn bottom-nav-link active" data-tab="hoy" onclick="showTab('hoy')"><span class="bnl-ic">🏠</span><span class="bnl-lb">Hoy</span></button>
-    <button type="button" class="nav-btn bottom-nav-link" data-tab="nutricion" onclick="showTab('nutricion')"><span class="bnl-ic">🍽</span><span class="bnl-lb">Nutrición</span></button>
-    <button type="button" class="nav-btn bottom-nav-link" data-tab="cuerpo" onclick="showTab('cuerpo')"><span class="bnl-ic">⚖️</span><span class="bnl-lb">Medidas</span></button>
-    <button type="button" class="nav-btn bottom-nav-link" data-tab="ejercicio" onclick="showTab('ejercicio')"><span class="bnl-ic">🏋</span><span class="bnl-lb">Ejercicio</span></button>
-    <button type="button" class="nav-btn bottom-nav-link" data-tab="bienestar" onclick="showTab('bienestar')"><span class="bnl-ic">🙂</span><span class="bnl-lb">Bienestar</span></button>
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Navegación principal">
+    <button type="button" class="nav-btn bottom-nav-link active client-only-nav" data-tab="hoy" onclick="showTab('hoy')"><span class="bnl-ic">🏠</span><span class="bnl-lb">Hoy</span></button>
+    <button type="button" class="nav-btn bottom-nav-link client-only-nav" data-tab="nutricion" onclick="showTab('nutricion')"><span class="bnl-ic">🍽</span><span class="bnl-lb">Nutrición</span></button>
+    <button type="button" class="nav-btn bottom-nav-link client-only-nav" data-tab="cuerpo" onclick="showTab('cuerpo')"><span class="bnl-ic">⚖️</span><span class="bnl-lb">Medidas</span></button>
+    <button type="button" class="nav-btn bottom-nav-link client-only-nav" data-tab="ejercicio" onclick="showTab('ejercicio')"><span class="bnl-ic">🏋</span><span class="bnl-lb">Ejercicio</span></button>
+    <button type="button" class="nav-btn bottom-nav-link client-only-nav" data-tab="bienestar" onclick="showTab('bienestar')"><span class="bnl-ic">🙂</span><span class="bnl-lb">Bienestar</span></button>
   </nav>
 
   <div class="menu-overlay" id="menu-overlay" role="dialog" aria-modal="true" aria-label="Menú">
@@ -642,12 +642,12 @@ canvas{display:block;width:100%;max-width:100%}
       <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700">Menú</div>
       <button type="button" class="btn-icon" onclick="toggleMenuOverlay(false)" aria-label="Cerrar menú" style="font-size:15px;padding:6px 10px">✕</button>
     </div>
-    <button type="button" class="menu-row" onclick="menuGoTab('hoy')"><span class="mr-ic">🏠</span>Hoy<span class="mr-ar">›</span></button>
-    <button type="button" class="menu-row" onclick="menuGoTab('nutricion')"><span class="mr-ic">🍽</span>Nutrición<span class="mr-ar">›</span></button>
-    <button type="button" class="menu-row" onclick="menuGoTab('cuerpo')"><span class="mr-ic">⚖️</span>Medidas<span class="mr-ar">›</span></button>
-    <button type="button" class="menu-row" onclick="menuGoTab('ejercicio')"><span class="mr-ic">🏋</span>Ejercicio<span class="mr-ar">›</span></button>
-    <button type="button" class="menu-row" onclick="menuGoTab('bienestar')"><span class="mr-ic">🙂</span>Bienestar<span class="mr-ar">›</span></button>
-    <button type="button" class="menu-row" onclick="menuGoTab('tendencias')"><span class="mr-ic">📊</span>Tendencias<span class="mr-ar">›</span></button>
+    <button type="button" class="menu-row client-only-nav" onclick="menuGoTab('hoy')"><span class="mr-ic">🏠</span>Hoy<span class="mr-ar">›</span></button>
+    <button type="button" class="menu-row client-only-nav" onclick="menuGoTab('nutricion')"><span class="mr-ic">🍽</span>Nutrición<span class="mr-ar">›</span></button>
+    <button type="button" class="menu-row client-only-nav" onclick="menuGoTab('cuerpo')"><span class="mr-ic">⚖️</span>Medidas<span class="mr-ar">›</span></button>
+    <button type="button" class="menu-row client-only-nav" onclick="menuGoTab('ejercicio')"><span class="mr-ic">🏋</span>Ejercicio<span class="mr-ar">›</span></button>
+    <button type="button" class="menu-row client-only-nav" onclick="menuGoTab('bienestar')"><span class="mr-ic">🙂</span>Bienestar<span class="mr-ar">›</span></button>
+    <button type="button" class="menu-row client-only-nav" onclick="menuGoTab('tendencias')"><span class="mr-ic">📊</span>Tendencias<span class="mr-ar">›</span></button>
     <div style="height:1px;background:#E7E5EF;margin:10px 0"></div>
     <button type="button" class="menu-row" onclick="menuGoTab('ajustes')"><span class="mr-ic">⚙️</span>Ajustes<span class="mr-ar">›</span></button>
     <button type="button" class="menu-row" id="menu-clientes-row" style="display:none" onclick="menuGoTab('admin')"><span class="mr-ic">👑</span>Mis clientes<span class="mr-ar">›</span></button>
@@ -658,6 +658,7 @@ canvas{display:block;width:100%;max-width:100%}
   <div id="tab-hoy">
     <div id="coach-note-banner"></div>
     <div id="dash-container"><div class="empty-state">Cargando...</div></div>
+    <div id="goal-widgets-section"></div>
   </div>
 
   <!-- NUTRICION -->
@@ -1520,8 +1521,21 @@ function enterApp(profile){
   if(adminBtn)adminBtn.style.display=PROFILE.is_admin?'':'none';
   const menuClientesRow=document.getElementById('menu-clientes-row');
   if(menuClientesRow)menuClientesRow.style.display=PROFILE.is_admin?'':'none';
+  // La coach tiene su propio perfil de CLIENTE aparte para su seguimiento
+  // personal — en el perfil admin no queremos las pestañas de tracking
+  // (Hoy/Nutrición/Medidas/Ejercicio/Bienestar/Tendencias) mezcladas con
+  // la gestión de clientas: se ocultan en las 3 barras de navegación
+  // (nav de escritorio, nav inferior y menú hamburguesa) y el admin entra
+  // directo a "Clientes" en vez de a "Hoy".
+  document.querySelectorAll('.client-only-nav').forEach(el=>{el.style.display=PROFILE.is_admin?'none':'';});
+  const bottomNav=document.getElementById('bottom-nav');
+  if(bottomNav)bottomNav.style.display=PROFILE.is_admin?'none':'';
   if(PROFILE.is_admin)refreshAdminBadge();
   document.getElementById('main-app').style.display='';
+  if(PROFILE.is_admin){
+    showTab('admin');
+    return;
+  }
   const di=document.getElementById('current-date');
   di.value=today();
   document.getElementById('date-display').textContent=formatDate(today());
@@ -1530,7 +1544,7 @@ function enterApp(profile){
   // selector de fecha no servía para nada. Ahora sí recarga.
   di.onchange=()=>loadDay(di.value);
   loadFoodCatalog();
-  buildMeals();loadDay(today());renderInBodyDatos();renderDashboard();renderCoachNoteBanner();
+  buildMeals();loadDay(today());renderInBodyDatos();renderDashboard();renderCoachNoteBanner();renderGoalWidgetsSection();
   initMoodButtons();
 }
 
@@ -1714,7 +1728,7 @@ function showTab(t){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.getElementById('gear-btn')?.classList.toggle('active',t==='ajustes');
   updateHeaderTitle(t);
-  if(t==='hoy'){renderDashboard();renderCoachNoteBanner();}
+  if(t==='hoy'){renderDashboard();renderCoachNoteBanner();renderGoalWidgetsSection();}
   if(t==='nutricion') nutriSetView(nutriSubView);
   if(t==='cuerpo'){renderProgreso();renderInBodyDatos();}
   if(t==='tendencias') renderTendencias();
@@ -1944,11 +1958,14 @@ async function adminRenderResumen(client,body){
   const balance=Math.round(recs.reduce((s,r)=>s+((r.totals?.cal||0)-tgt.cal),0));
   const ib=ibRows&&ibRows[0];
   const lastNote=lastNoteRows&&lastNoteRows[0];
+  const protocol=protocolRows&&protocolRows[0];
+  const g=await computeGoalWidgets(client.id,client.weight_goal,protocol,tgt.cal);
   body.innerHTML=`
     ${wk?`<div class="dash-section" style="margin-bottom:14px;background:#EAE8FB;border-color:#D6D1F5;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div style="font-size:13px;font-weight:600;color:#3A2FA0">Semana ${wk.weekNum}${wk.totalWeeks?' de '+wk.totalWeeks:''}${wk.daysLeft!=null?(wk.daysLeft>=0?` · faltan ${wk.daysLeft} días`:' · plan vencido'):''}</div>
       <button class="btn-sm" onclick="adminDetailSetTab('plan')">Ver plan →</button>
     </div>`:''}
+    ${goalWidgetsHTML(g)}
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
       <div class="today-card"><div class="today-card-title">Calorías prom./día (7d)</div><div class="today-card-val">${avgCal} <span style="font-size:11px;color:#ADAAB8;font-weight:600">/ meta ${tgt.cal}</span></div></div>
       <div class="today-card"><div class="today-card-title">Balance acumulado (7d)</div><div class="today-card-val" style="color:${balance<=0?'#17C39B':'#DC3B3B'}">${balance>0?'+':''}${balance} kcal</div></div>
@@ -1991,6 +2008,169 @@ function planWeekInfo(protocol){
   return{weekNum,totalWeeks,daysLeft};
 }
 
+// ── OBJETIVOS: WIDGETS DE AVANCE + SCORE SEMANAL ─────────────
+// Se usa igual del lado de la clienta (su propio perfil) y del lado de
+// la coach (perfil de cualquier clienta) para no duplicar dos veces la
+// lógica de las "reglas de ajuste" de la ficha (peso, calorías,
+// cintura, entrenamientos → un score 0-100 + un mensaje corto).
+function getPrevWeek(){const d=[];for(let i=13;i>=7;i--){const dt=new Date();dt.setDate(dt.getDate()-i);d.push(localDateStr(dt));}return d;}
+
+function withinPct(val,target,pct){if(!target)return false;return val>=target*(1-pct)&&val<=target*(1+pct);}
+
+// El peso de báscula (medidas.peso_kg) y el de un InBody (inbody.peso)
+// se combinan en una sola serie por fecha — si hay ambos el mismo día,
+// se promedian — así el promedio semanal no depende de una sola fuente.
+function mergeWeightSeries(ibRows,medRows){
+  const map={};
+  (ibRows||[]).forEach(r=>{if(r.peso!=null&&r.peso!=='')(map[r.date]=map[r.date]||[]).push(parseFloat(r.peso));});
+  (medRows||[]).forEach(r=>{if(r.peso_kg!=null&&r.peso_kg!=='')(map[r.date]=map[r.date]||[]).push(parseFloat(r.peso_kg));});
+  return Object.entries(map).map(([date,vals])=>({date,peso:vals.reduce((a,b)=>a+b,0)/vals.length})).sort((a,b)=>a.date<b.date?-1:1);
+}
+function avgWeightForDates(series,dateSet){
+  const vals=series.filter(s=>dateSet.has(s.date)).map(s=>s.peso);
+  if(!vals.length)return null;
+  return Math.round((vals.reduce((a,b)=>a+b,0)/vals.length)*10)/10;
+}
+
+async function computeGoalWidgets(profileId,weightGoal,protocol,fallbackCalTarget){
+  const thisWeek=getLast7();const prevWeek=getPrevWeek();
+  const thisWeekSet=new Set(thisWeek),prevWeekSet=new Set(prevWeek);
+  const [diary14,ibRows,medRows,logs7]=await Promise.all([
+    SB.get('diary',`profile_id=eq.${profileId}&date=gte.${prevWeek[0]}&order=date.asc`),
+    SB.get('inbody',`profile_id=eq.${profileId}&order=date.desc&limit=20`),
+    SB.get('medidas',`profile_id=eq.${profileId}&order=date.desc&limit=20`),
+    SB.get('workout_logs',`client_id=eq.${profileId}&date=gte.${thisWeek[0]}`)
+  ]);
+  const trainedDates=new Set((logs7||[]).map(l=>l.date).filter(d=>thisWeekSet.has(d)));
+
+  // ── Peso ──
+  const weightSeries=mergeWeightSeries(ibRows,medRows);
+  const avgThisWeek=avgWeightForDates(weightSeries,thisWeekSet);
+  const avgPrevWeek=avgWeightForDates(weightSeries,prevWeekSet);
+  const nRegsThisWeek=weightSeries.filter(s=>thisWeekSet.has(s.date)).length;
+  let weightScore=null,weightInsight=null,weightSub='Sin registros esta semana';
+  if(avgThisWeek!=null){
+    weightSub=nRegsThisWeek<2?`${nRegsThisWeek} registro esta semana — pésate 3-4x/semana para un promedio confiable`:`${nRegsThisWeek} registros esta semana`;
+    if(avgPrevWeek!=null){
+      const delta=Math.round((avgThisWeek-avgPrevWeek)*100)/100;
+      const dir=weightGoal!=null&&weightGoal!==''?(parseFloat(weightGoal)<avgThisWeek?'baja':parseFloat(weightGoal)>avgThisWeek?'sube':'mantiene'):null;
+      weightSub+=` · ${delta>0?'+':''}${delta} kg vs. semana pasada`;
+      if(dir==='baja'){
+        if(delta>=0){weightScore=40;weightInsight='No bajaste esta semana. Revisa pasos y adherencia; si se repite, resta ~100 kcal.';}
+        else if(delta<-0.5){weightScore=65;weightInsight='Estás bajando más rápido de lo recomendado (máx. ~0.5 kg/semana). Sube 100-150 kcal para proteger la masa magra.';}
+        else if(delta<=-0.25){weightScore=100;}
+        else{weightScore=80;weightInsight='Vas bajando, pero algo lento — revisa que la adherencia esté completa.';}
+      }else if(dir==='sube'){
+        if(delta<=0){weightScore=40;weightInsight='No subiste esta semana. Revisa que estés llegando a tu meta calórica todos los días.';}
+        else{weightScore=100;}
+      }else{
+        weightScore=Math.abs(delta)<=0.6?100:60;
+        if(weightScore<100)weightInsight=`Tu peso se movió ${Math.abs(delta)} kg esta semana. Vale la pena revisar qué cambió.`;
+      }
+    }
+  }
+
+  // ── Calorías (usa la meta del protocolo por tipo de día si existe) ──
+  const dayTarget=(date)=>{
+    if(protocol&&(protocol.kcal_entreno||protocol.kcal_descanso))return trainedDates.has(date)?(protocol.kcal_entreno||fallbackCalTarget):(protocol.kcal_descanso||fallbackCalTarget);
+    return fallbackCalTarget;
+  };
+  const registeredThisWeek=(diary14||[]).filter(r=>thisWeekSet.has(r.date));
+  const daysInGoal=registeredThisWeek.filter(r=>withinPct(r.totals?.cal||0,dayTarget(r.date),0.10)).length;
+  let calScore=null,calInsight=null;
+  let calSub='Sin registros esta semana';
+  if(registeredThisWeek.length){
+    calScore=Math.round(daysInGoal/registeredThisWeek.length*100);
+    calSub=`${calScore}% de los días registrados`;
+    if(calScore<80)calInsight=`Solo ${daysInGoal} de ${registeredThisWeek.length} días estuviste dentro de tu meta calórica (±10%). Trata de llegar al menos al 80% de los días.`;
+  }
+
+  // ── Cintura ──
+  const cinturaRows=(medRows||[]).filter(r=>r.cintura!=null&&r.cintura!=='');
+  const latestCintura=cinturaRows[0]||null,prevCintura=cinturaRows[1]||null;
+  let cinturaSub='Sin datos aún';
+  if(latestCintura){
+    const daysSince=Math.floor((new Date(today()+'T00:00:00')-new Date(latestCintura.date+'T00:00:00'))/86400000);
+    cinturaSub=`Hace ${daysSince} día${daysSince!==1?'s':''}`;
+    if(prevCintura){const d=Math.round((latestCintura.cintura-prevCintura.cintura)*10)/10;cinturaSub+=` · ${d>0?'+':''}${d} cm vs. anterior`;}
+    if(daysSince>16)cinturaSub+=' — toca remedir (cada 2 semanas)';
+  }
+
+  // ── Entrenamientos ──
+  const sessionsThisWeek=trainedDates.size;
+  const goalSessions=protocol?(((protocol.fuerza_dias||0)+(protocol.cardio_dias||0))||null):null;
+  let entrenoScore=null,entrenoInsight=null;
+  const entrenoSub=goalSessions?`Meta: ${goalSessions}/semana`:'Sin meta de sesiones definida';
+  if(goalSessions){
+    entrenoScore=Math.min(100,Math.round(sessionsThisWeek/goalSessions*100));
+    if(entrenoScore<70)entrenoInsight=`Te faltaron sesiones esta semana (${sessionsThisWeek} de ${goalSessions}).`;
+  }
+
+  // ── Score combinado (adherencia calórica 40% + tendencia de peso 35%
+  // + constancia de entrenamiento 25% — se re-normaliza entre los que sí
+  // tengan datos esta semana) ──
+  const parts=[{s:calScore,w:40},{s:weightScore,w:35},{s:entrenoScore,w:25}].filter(p=>p.s!=null);
+  const totalW=parts.reduce((a,p)=>a+p.w,0);
+  const score=totalW?Math.round(parts.reduce((a,p)=>a+p.s*p.w,0)/totalW):null;
+  let label,color,bg;
+  if(score==null){label='Sin datos suficientes';color='#ADAAB8';bg='#F4F3F7';}
+  else if(score>=85){label='Excelente';color='#17C39B';bg='#E6FAF3';}
+  else if(score>=65){label='Buena';color='#5B4FE9';bg='#EFEDFB';}
+  else if(score>=45){label='Atención';color='#B8860B';bg='#FFF8E8';}
+  else{label='Bajo ritmo';color='#DC3B3B';bg='#FDEDEA';}
+  const insight=weightInsight||calInsight||entrenoInsight||(score!=null&&score>=85?'Vas muy bien, mantén el ritmo.':score==null?'Aún no hay suficientes registros esta semana para calcular el score.':'Vas en buen camino, sigue así.');
+
+  return{
+    score:{value:score,label,color,bg,insight},
+    weight:{avgThisWeek,subText:weightSub},
+    cal:{daysInGoal,registered:registeredThisWeek.length,subText:calSub},
+    cintura:{latest:latestCintura?latestCintura.cintura:null,subText:cinturaSub},
+    entreno:{sessions:sessionsThisWeek,goal:goalSessions,subText:entrenoSub}
+  };
+}
+
+// Tarjetas de "vista rápida de avance" + score semanal — mismo bloque
+// de HTML para el "Hoy" de la clienta y el "Resumen" de la coach.
+function goalWidgetsHTML(g){
+  return `
+  <div class="dash-section" style="margin-bottom:14px;background:${g.score.bg};border-color:${g.score.color}33">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#8B8896;text-transform:uppercase;letter-spacing:.05em">Score semanal</div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span style="font-size:28px;font-weight:800;color:${g.score.color}">${g.score.value!=null?g.score.value:'—'}</span>
+          ${g.score.value!=null?'<span style="font-size:13px;color:#ADAAB8;font-weight:600">/100</span>':''}
+        </div>
+        <div style="font-size:12px;font-weight:700;color:${g.score.color}">${g.score.label}</div>
+      </div>
+      <div style="max-width:230px;font-size:12px;color:#6B6878;line-height:1.4">${g.score.insight}</div>
+    </div>
+  </div>
+  <div class="dash-section-title">Avance hacia el objetivo</div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+    <div class="today-card" style="cursor:default">
+      <div class="today-card-title">⚖️ Peso (prom. semana)</div>
+      <div class="today-card-val">${g.weight.avgThisWeek!=null?g.weight.avgThisWeek+' kg':'Sin datos'}</div>
+      <div class="today-card-sub">${g.weight.subText}</div>
+    </div>
+    <div class="today-card" style="cursor:default">
+      <div class="today-card-title">🍽 Días en meta calórica</div>
+      <div class="today-card-val">${g.cal.daysInGoal}<span style="font-size:12px;color:#ADAAB8">/${g.cal.registered}</span></div>
+      <div class="today-card-sub">${g.cal.subText}</div>
+    </div>
+    <div class="today-card" style="cursor:default">
+      <div class="today-card-title">📏 Cintura</div>
+      <div class="today-card-val">${g.cintura.latest!=null?g.cintura.latest+' cm':'Sin datos'}</div>
+      <div class="today-card-sub">${g.cintura.subText}</div>
+    </div>
+    <div class="today-card" style="cursor:default">
+      <div class="today-card-title">🏋 Entrenamientos</div>
+      <div class="today-card-val">${g.entreno.goal!=null?g.entreno.sessions+'/'+g.entreno.goal:g.entreno.sessions}</div>
+      <div class="today-card-sub">${g.entreno.subText}</div>
+    </div>
+  </div>`;
+}
+
 // ── ADMIN: PLAN / PROTOCOLO ──────────────────────────────────
 // Una fila por clienta (se reemplaza al arrancar una fase nueva). Objetivo
 // en texto libre, calorías que pueden variar por tipo de día (algo que
@@ -2008,7 +2188,7 @@ async function adminRenderPlan(client,body){
     <div class="dash-section" style="margin-bottom:14px">
       <div class="dash-section-title">Objetivo y duración</div>
       <label style="font-size:11px;color:#8B8896;display:block;margin-bottom:4px">Objetivo</label>
-      <textarea id="plan-objetivo" rows="2" placeholder="Ej: Bajar de 30.9% a 26-27% de grasa en 12 semanas, conservando la masa magra" style="margin-bottom:10px">${p.objetivo||''}</textarea>
+      <textarea id="plan-objetivo" rows="3" placeholder="Ej: Bajar de 30.9% a 26-27% de grasa en 12 semanas, conservando la masa magra" style="margin-bottom:10px">${p.objetivo||''}</textarea>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Fecha de inicio</label><input type="date" id="plan-fecha-inicio" value="${p.fecha_inicio||''}"></div>
         <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Fecha de cierre / próxima medición</label><input type="date" id="plan-fecha-fin" value="${p.fecha_fin||''}"></div>
@@ -2108,6 +2288,7 @@ async function adminRenderTendencias(client,body){
   body.innerHTML=`
     <div class="chart-tabs" id="admin-trend-tabs" style="margin-bottom:10px;flex-wrap:wrap"></div>
     <div class="chart-wrap"><canvas id="admin-trend-canvas" height="220"></canvas></div>
+    <div id="admin-goal-row" style="margin-top:10px"></div>
   `;
   document.getElementById('admin-trend-tabs').innerHTML=TREND_FIELDS.map(f=>`<button class="chart-tab${f.key===adminDetail.trendField?' active':''}" onclick="adminSetTrendField('${f.key}')">${f.label.split(' ')[0]}</button>`).join('');
   await adminDrawTrend(client);
@@ -2123,6 +2304,61 @@ async function adminDrawTrend(client){
     ?(client.weight_goal!=null&&client.weight_goal!==''?parseFloat(client.weight_goal):null)
     :((client.indicator_goals||{})[field.key]!=null?parseFloat(client.indicator_goals[field.key]):null);
   drawLineChart(canvas,labels,[{data,color:field.color}],goal);
+  adminRenderGoalRow(client.id,field,history,goal);
+}
+
+// Objetivo editable por indicador, desde el panel de la coach — antes solo
+// la propia clienta podía poner su meta (peso/cintura/etc.) desde su lado;
+// ahora la coach también puede ajustarla directo desde Tendencias de cada
+// clienta, sin depender de que la clienta lo haga. Misma tarjeta
+// Objetivo/Real/Gap que ya existía del lado de la clienta.
+async function adminSetFieldGoal(clientId,key,value){
+  const client=ALL_PROFILES.find(p=>p.id===clientId);
+  if(!client)return false;
+  const val=value===''||value==null?null:parseFloat(value);
+  const patch=key==='peso'?{weight_goal:val}:{indicator_goals:{...(client.indicator_goals||{}),[key]:val}};
+  if(key!=='peso'&&val===null)delete patch.indicator_goals[key];
+  const result=await SB.patch('profiles',`id=eq.${clientId}`,patch);
+  if(!result){alert('No se pudo guardar el objetivo. Verifica tu conexión e intenta de nuevo.');return false;}
+  Object.assign(client,patch);
+  // Si la propia clienta tiene su sesión abierta, PROFILE es un objeto
+  // distinto al de ALL_PROFILES — se actualiza también por si esta misma
+  // pestaña la tiene cargada en otra parte de la app.
+  if(typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.id===clientId)Object.assign(PROFILE,patch);
+  return true;
+}
+async function adminSaveFieldGoal(clientId,key){
+  const input=document.getElementById('admin-goal-input');
+  const ok=await adminSetFieldGoal(clientId,key,input?input.value:'');
+  if(!ok)return;
+  const msg=document.getElementById('admin-goal-msg');
+  if(msg){msg.classList.add('show');setTimeout(()=>msg.classList.remove('show'),2000);}
+  const client=ALL_PROFILES.find(p=>p.id===clientId);
+  if(client)await adminDrawTrend(client);
+}
+function adminRenderGoalRow(clientId,field,history,goalValue){
+  const el=document.getElementById('admin-goal-row');if(!el)return;
+  const last=history.length?history[history.length-1]:null;
+  const real=(last&&last[field.key]!=null)?parseFloat(last[field.key]):null;
+  const gap=(real!=null&&goalValue!=null)?Math.round((real-goalValue)*10)/10:null;
+  const gapColor=gap==null?'#6B6878':(gap>0?'#DC3B3B':(gap<0?'#17C39B':'#6B6878'));
+  const gapText=gap!=null?`${gap>0?'+':''}${gap}`:'—';
+  el.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;background:#F7F6FB;border-radius:10px;padding:10px 12px">
+    <div>
+      <div style="font-size:10.5px;color:#ADAAB8;margin-bottom:2px">🎯 Objetivo</div>
+      <input type="number" step="0.1" id="admin-goal-input" value="${goalValue!=null?goalValue:''}" placeholder="—" style="width:80px">
+    </div>
+    <div>
+      <div style="font-size:10.5px;color:#ADAAB8;margin-bottom:2px">Real</div>
+      <div style="font-size:14px;font-weight:600;padding:6px 0">${real!=null?real:'—'}</div>
+    </div>
+    <div>
+      <div style="font-size:10.5px;color:#ADAAB8;margin-bottom:2px">Gap</div>
+      <div style="font-size:14px;font-weight:600;padding:6px 0;color:${gapColor}">${gapText}</div>
+    </div>
+    <button class="btn-sm primary" onclick="adminSaveFieldGoal('${clientId}','${field.key}')">Guardar</button>
+    <span class="save-msg" id="admin-goal-msg">✓ Guardado</span>
+  </div>`;
 }
 
 // Solo lectura — a diferencia del historial de la propia clienta, acá la
@@ -2227,6 +2463,22 @@ async function renderCoachNoteBanner(){
       <div style="font-size:13px;margin-top:2px">${n.note}</div>
     </div>
   </div>`;
+}
+
+// Widgets de avance + score semanal, en "Hoy" del lado de la clienta.
+// Se oculta por completo si la coach todavía no le definió ninguna meta
+// (ni protocolo ni peso objetivo) — mismo criterio que "Tu plan" en
+// Ajustes, para no mostrar tarjetas vacías sin contexto.
+async function renderGoalWidgetsSection(){
+  const el=document.getElementById('goal-widgets-section');
+  if(!el)return;
+  if(!PROFILE||PROFILE.is_admin){el.innerHTML='';return;}
+  const rows=await SB.get('client_protocols',`profile_id=eq.${PROFILE.id}&limit=1`);
+  const p=rows&&rows[0];
+  const hasProtocol=p&&(p.objetivo||p.fecha_inicio||(p.hitos||[]).length);
+  if(!hasProtocol&&!PROFILE.weight_goal){el.innerHTML='';return;}
+  const g=await computeGoalWidgets(PROFILE.id,PROFILE.weight_goal,p,TARGETS.cal);
+  el.innerHTML=goalWidgetsHTML(g);
 }
 
 // "Tu plan" en Ajustes — solo lectura para la clienta: lo que la coach
@@ -3327,7 +3579,11 @@ function drawLineChart(canvas,labels,datasets,goalValue){
 
 function renderProgreso(){
   const mf=document.getElementById('medidas-inputs');
-  if(mf)mf.innerHTML=MED_FIELDS.map(f=>`<div><label>${f.label} (cm)</label><input type="number" id="med-${f.key}" placeholder="0" step="0.1" min="0"></div>`).join('');
+  // "Peso (kg)" vive aparte de MED_FIELDS (que son puras medidas en cm)
+  // para poder registrarlo solo, las veces que haga falta en la semana,
+  // sin tener que llenar cintura/cadera/etc. cada vez.
+  if(mf)mf.innerHTML=`<div><label>⚖️ Peso (kg)</label><input type="number" id="med-peso-kg" placeholder="0" step="0.1" min="0"></div>`+
+    MED_FIELDS.map(f=>`<div><label>${f.label} (cm)</label><input type="number" id="med-${f.key}" placeholder="0" step="0.1" min="0"></div>`).join('');
   // Fecha por defecto: hoy, salvo que estemos editando un registro pasado
   // (editMedida() la deja puesta y no queremos pisarla al re-renderizar).
   const fechaEl=document.getElementById('med-fecha');
@@ -3430,6 +3686,8 @@ let editingMedidaDate=null;
 async function saveMedidas(){
   const dateVal=document.getElementById('med-fecha')?.value||today();
   const entry={profile_id:PROFILE.id,date:dateVal};
+  const pesoVal=document.getElementById('med-peso-kg')?.value;
+  entry.peso_kg=pesoVal?parseFloat(pesoVal):null;
   MED_FIELDS.forEach(f=>{const v=document.getElementById('med-'+f.key)?.value;entry[f.key]=v?parseFloat(v):null;});
   entry.notas=(document.getElementById('med-notas')?.value||'').trim()||null;
   if(editingMedidaDate&&editingMedidaDate!==dateVal){
@@ -3450,6 +3708,7 @@ async function editMedida(date){
   const rows=await SB.get('medidas',`profile_id=eq.${PROFILE.id}&date=eq.${date}`);
   const rec=rows&&rows[0];
   if(!rec){alert('No se encontró ese registro.');return;}
+  const pesoEl=document.getElementById('med-peso-kg');if(pesoEl)pesoEl.value=rec.peso_kg!=null?rec.peso_kg:'';
   MED_FIELDS.forEach(f=>{const el=document.getElementById('med-'+f.key);if(el)el.value=rec[f.key]!=null?rec[f.key]:'';});
   const notasEl=document.getElementById('med-notas');if(notasEl)notasEl.value=rec.notas||'';
   const fechaEl=document.getElementById('med-fecha');if(fechaEl)fechaEl.value=rec.date;
@@ -3470,7 +3729,7 @@ async function renderMedidasHistory(){
           <button class="btn-del" onclick="deleteMedida('${h.date}')">×</button>
         </div>
       </div>
-      <div class="medida-vals">${MED_FIELDS.filter(f=>h[f.key]).map(f=>`<span class="medida-pill">${f.label}: ${h[f.key]}cm</span>`).join('')}</div>
+      <div class="medida-vals">${h.peso_kg?`<span class="medida-pill" style="background:#EFEDFB;color:#5B4FE9;font-weight:700">⚖️ ${h.peso_kg} kg</span>`:''}${MED_FIELDS.filter(f=>h[f.key]).map(f=>`<span class="medida-pill">${f.label}: ${h[f.key]}cm</span>`).join('')}</div>
       ${h.notas?`<div style="font-size:11px;color:#8B8896">💬 ${h.notas}</div>`:''}
     </div>`).join('');
 }
@@ -3854,6 +4113,7 @@ let exFieldTimers={};
 let exState={
   coachClientId:null,
   day:dayLabel(today()),
+  week:mondayOf(today()), // lunes de la semana que se está viendo — permite que cada semana tenga su propia rutina
   view:'rutina', // coach: rutina|balance — cliente: entreno|biblioteca|historial
   libGroup:'Todos',
   libSearch:'',
@@ -3863,7 +4123,7 @@ let exState={
   bibQuickLogId:null,
   bibQuickLogSaved:null,
   progressExerciseId:null,
-  routines:{}, // {clientId:{day:[{exercise_id,sets,reps,weight}]}}
+  routines:{}, // {clientId:{weekStart:{day:[{exercise_id,sets,reps,weight}]}}}
   logs:[], // [{client_id,exercise_id,date,set_index,weight,reps}]
   calBurnedToday:null, // calorías quemadas hoy, según el reloj inteligente (carga manual)
   calBurnedHistory:[] // [{profile_id,date,calories}] — historial completo, editable/eliminable
@@ -3875,11 +4135,33 @@ function exCurrentWeekDates(){
   const out=[];for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);out.push(localDateStr(d));}
   return out;
 }
+// ── Semana de la rutina (para poder armar una progresión real: el jueves
+// de la semana 3 puede tener distinto peso que el de la semana 2, en vez
+// de ser siempre "el mismo jueves" repetido para siempre) ──
+// mondayOf: el lunes (YYYY-MM-DD) de la semana que contiene esa fecha.
+function mondayOf(dateStr){const d=new Date(dateStr+'T12:00:00');const idx=exWeekdayMon0(d);d.setDate(d.getDate()-idx);return localDateStr(d);}
+function addWeeks(mondayStr,n){const d=new Date(mondayStr+'T12:00:00');d.setDate(d.getDate()+n*7);return localDateStr(d);}
+// Las 7 fechas (lun..dom) de la semana que arranca en mondayStr — el mismo
+// orden que EX_DAYS, así weekDatesFrom(w)[EX_DAYS.indexOf(exState.day)] da
+// la fecha real de "ese día, en esa semana".
+function weekDatesFrom(mondayStr){const out=[];for(let i=0;i<7;i++){const d=new Date(mondayStr+'T12:00:00');d.setDate(d.getDate()+i);out.push(localDateStr(d));}return out;}
+const EX_MONTH_ABBR=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function weekRangeLabel(mondayStr){
+  const start=new Date(mondayStr+'T12:00:00');const end=new Date(start);end.setDate(end.getDate()+6);
+  const f=d=>`${d.getDate()} ${EX_MONTH_ABBR[d.getMonth()]}`;
+  return `${f(start)} – ${f(end)}`;
+}
 function exFindExercise(id){return(EXERCISES_CACHE||[]).find(e=>e.id===id);}
 // Algunos ejercicios de cardio (caminata, running, remo...) se registran en
 // distancia/duración en vez de series×reps×peso — este helper lo detecta en
 // un solo lugar para que el resto del módulo no repita la condición.
 function exIsDistance(ex){return!!ex&&ex.log_type==='distance';}
+// Muchas máquinas/ejercicios muestran el peso en libras y otras en kg — en
+// vez de forzar todo a una sola unidad (y obligar a convertir de cabeza),
+// cada ejercicio del catálogo guarda SU propia unidad. El número que se
+// registra nunca se convierte, solo se etiqueta siempre con la unidad de
+// ESE ejercicio — así no hace falta ninguna matemática de conversión.
+function exWeightUnit(ex){return(ex&&ex.weight_unit==='lb')?'lb':'kg';}
 function exDemoMediaHtml(url){
   if(!url)return '';
   const clean=String(url).trim();
@@ -3902,7 +4184,7 @@ function exDemoMediaHtml(url){
   return `<a href="${clean}" target="_blank" rel="noopener" style="font-size:11px;color:#5B4FE9;text-decoration:none;display:inline-block;margin-top:6px">▶ Ver video</a>`;
 }
 function exFindClient(id){return ALL_PROFILES.find(p=>p.id===id);}
-function exRoutineFor(clientId,day){return(exState.routines[clientId]&&exState.routines[clientId][day])||[];}
+function exRoutineFor(clientId,week,day){return(exState.routines[clientId]&&exState.routines[clientId][week]&&exState.routines[clientId][week][day])||[];}
 function exFindLog(clientId,exerciseId,date,setIndex){return exState.logs.find(l=>l.client_id===clientId&&l.exercise_id===exerciseId&&l.date===date&&l.set_index===setIndex);}
 // Un punto (el máximo) por FECHA distinta en que se registró el ejercicio —
 // se usa tanto para el gráfico de detalle como para la flecha de progreso
@@ -3940,8 +4222,13 @@ async function loadExerciseData(clientId){
   ]);
   exState.routines[clientId]={};
   (routineRows||[]).forEach(r=>{
-    exState.routines[clientId][r.day]=exState.routines[clientId][r.day]||[];
-    exState.routines[clientId][r.day].push({exercise_id:r.exercise_id,sets:Number(r.sets),reps:Number(r.reps),weight:Number(r.weight),distance:Number(r.distance)||0,duration:Number(r.duration)||0});
+    // week_start puede venir vacío en filas viejas que no hayan corrido la
+    // migración todavía — se tratan como si fueran de la semana actual,
+    // para no perderlas de vista mientras tanto.
+    const wk=r.week_start||mondayOf(today());
+    exState.routines[clientId][wk]=exState.routines[clientId][wk]||{};
+    exState.routines[clientId][wk][r.day]=exState.routines[clientId][wk][r.day]||[];
+    exState.routines[clientId][wk][r.day].push({exercise_id:r.exercise_id,sets:Number(r.sets),reps:Number(r.reps),weight:Number(r.weight),distance:Number(r.distance)||0,duration:Number(r.duration)||0});
   });
   exState.logs=exState.logs.filter(l=>l.client_id!==clientId).concat((logRows||[]).map(l=>({client_id:l.client_id,exercise_id:l.exercise_id,date:l.date,set_index:Number(l.set_index),weight:Number(l.weight),reps:Number(l.reps),distance:Number(l.distance)||0,duration:Number(l.duration)||0})));
   exState.calBurnedHistory=exState.calBurnedHistory.filter(c=>c.profile_id!==clientId).concat(calRows||[]);
@@ -4019,6 +4306,10 @@ async function renderEjercicio(){
   c.innerHTML='<div class="empty-state">Cargando...</div>';
   try{
     await loadExerciseCatalog();
+    // Cada vez que se entra a la pestaña Ejercicio se vuelve a parar en la
+    // semana actual — evita quedar "perdido" en una semana pasada/futura
+    // que se estaba mirando en una visita anterior.
+    exState.week=mondayOf(today());
     if(PROFILE.is_admin){
       if(!['rutina','balance','historial'].includes(exState.view))exState.view='rutina';
       if(!exState.coachClientId){
@@ -4058,75 +4349,121 @@ function renderExCoach(){
 async function exSelectClient(id){exState.coachClientId=id;await loadExerciseData(id);renderExCoach();}
 function exSetView(v){exState.view=v;renderExCoach();}
 function exSelectDay(d){exState.day=d;PROFILE.is_admin?renderExCoach():renderExClient();}
+function exShiftWeek(delta){exState.week=addWeeks(exState.week,delta);PROFILE.is_admin?renderExCoach():renderExClient();}
+
+// Duplica TODA la rutina de la semana anterior (todos los días) a la
+// semana que se está viendo — para no tener que rearmar desde cero cada
+// semana un plan que en general solo cambia un poco (ej: subir peso).
+// Si la semana destino ya tiene ejercicios, los reemplaza (con confirmación).
+async function exCopyWeek(clientId){
+  const fromWeek=addWeeks(exState.week,-1);
+  const fromRoutines=exState.routines[clientId]&&exState.routines[clientId][fromWeek];
+  if(!fromRoutines||!Object.values(fromRoutines).some(arr=>arr.length)){
+    alert('La semana anterior ('+weekRangeLabel(fromWeek)+') no tiene ejercicios asignados para copiar.');
+    return;
+  }
+  const toRoutines=exState.routines[clientId]&&exState.routines[clientId][exState.week];
+  const hasExisting=toRoutines&&Object.values(toRoutines).some(arr=>arr.length);
+  if(hasExisting&&!confirm('Esta semana ya tiene ejercicios asignados — copiar la semana anterior los reemplazará. ¿Continuar?'))return;
+  if(hasExisting){
+    await SB.del('routine_items',`client_id=eq.${clientId}&week_start=eq.${exState.week}`);
+  }
+  const newItems=[];
+  Object.entries(fromRoutines).forEach(([day,arr])=>{
+    arr.forEach(e=>newItems.push({client_id:clientId,week_start:exState.week,day,exercise_id:e.exercise_id,sets:e.sets,reps:e.reps,weight:e.weight,distance:e.distance,duration:e.duration}));
+  });
+  for(const item of newItems){await SB.post('routine_items',item);}
+  exState.routines[clientId][exState.week]={};
+  newItems.forEach(item=>{
+    const wk=exState.routines[clientId][exState.week];
+    wk[item.day]=wk[item.day]||[];
+    wk[item.day].push({exercise_id:item.exercise_id,sets:item.sets,reps:item.reps,weight:item.weight,distance:item.distance,duration:item.duration});
+  });
+  renderExCoach();
+}
+
+// Barra "◀ Semana del ... ▶" reutilizada en Rutina y Balance semanal —
+// mismo exState.week para las dos vistas, así no se desincronizan.
+function exWeekNavHtml(clientId){
+  const isCurrent=exState.week===mondayOf(today());
+  return `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px">
+    <button class="btn-sm" onclick="exShiftWeek(-1)" aria-label="Semana anterior">◀</button>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#17171A">Semana del ${weekRangeLabel(exState.week)}${isCurrent?' <span style=\'color:#17C39B;font-weight:700\'>· actual</span>':''}</div>
+    <button class="btn-sm" onclick="exShiftWeek(1)" aria-label="Semana siguiente">▶</button>
+  </div>
+  ${clientId?`<div style="text-align:center;margin-bottom:12px"><button class="btn-sm" onclick="exCopyWeek('${clientId}')">📋 Copiar semana anterior</button></div>`:''}`;
+}
 
 function exRenderRutina(){
   const clientId=exState.coachClientId;
   const days=EX_DAYS.map(d=>`<button class="chart-tab${d===exState.day?' active':''}" onclick="exSelectDay('${d}')">${d}</button>`).join('');
-  const arr=exRoutineFor(clientId,exState.day);
+  const arr=exRoutineFor(clientId,exState.week,exState.day);
   const rows=arr.length?arr.map(e=>{
     const ex=exFindExercise(e.exercise_id);
     const isDist=exIsDistance(ex);
     const fieldsHtml=isDist?`
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Distancia (km)</label><input type="number" min="0" step="0.1" value="${e.distance}" oninput="exUpdateField('${clientId}','${exState.day}','${e.exercise_id}','distance',this.value)"></div>
-        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Duración (min)</label><input type="number" min="0" step="1" value="${e.duration}" oninput="exUpdateField('${clientId}','${exState.day}','${e.exercise_id}','duration',this.value)"></div>
+        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Distancia (km)</label><input type="number" min="0" step="0.1" value="${e.distance}" oninput="exUpdateField('${clientId}','${exState.week}','${exState.day}','${e.exercise_id}','distance',this.value)"></div>
+        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Duración (min)</label><input type="number" min="0" step="1" value="${e.duration}" oninput="exUpdateField('${clientId}','${exState.week}','${exState.day}','${e.exercise_id}','duration',this.value)"></div>
       </div>`:`
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
-        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Series</label><input type="number" min="1" value="${e.sets}" oninput="exUpdateField('${clientId}','${exState.day}','${e.exercise_id}','sets',this.value)"></div>
-        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Reps</label><input type="number" min="1" value="${e.reps}" oninput="exUpdateField('${clientId}','${exState.day}','${e.exercise_id}','reps',this.value)"></div>
-        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Peso (kg)</label><input type="number" min="0" step="0.5" value="${e.weight}" oninput="exUpdateField('${clientId}','${exState.day}','${e.exercise_id}','weight',this.value)"></div>
+        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Series</label><input type="number" min="1" value="${e.sets}" oninput="exUpdateField('${clientId}','${exState.week}','${exState.day}','${e.exercise_id}','sets',this.value)"></div>
+        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Reps</label><input type="number" min="1" value="${e.reps}" oninput="exUpdateField('${clientId}','${exState.week}','${exState.day}','${e.exercise_id}','reps',this.value)"></div>
+        <div><label style="font-size:10px;color:#ADAAB8;display:block;margin-bottom:2px">Peso (${exWeightUnit(ex)})</label><input type="number" min="0" step="0.5" value="${e.weight}" oninput="exUpdateField('${clientId}','${exState.week}','${exState.day}','${e.exercise_id}','weight',this.value)"></div>
       </div>`;
     return `<div class="meal-section">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-        <div><div style="font-size:13px;font-weight:500">${ex?ex.name:e.exercise_id}</div><span class="medida-pill" style="margin-top:4px;display:inline-block">${ex?ex.muscle_group:''}</span>${ex?.demo_url?` <a href="${ex.demo_url}" target="_blank" rel="noopener" style="font-size:11px;color:#5B4FE9;text-decoration:none">▶ Video</a>`:''}</div>
-        <button class="btn-del" onclick="exRemoveItem('${clientId}','${exState.day}','${e.exercise_id}')">×</button>
+        <div><div style="font-size:13px;font-weight:500">${ex?ex.name:e.exercise_id}</div><span class="medida-pill" style="margin-top:4px;display:inline-block">${ex?ex.muscle_group:''}</span>${!isDist?` <span class="medida-pill" style="margin-top:4px;display:inline-block">${exWeightUnit(ex)}</span>`:''}${ex?.demo_url?` <a href="${ex.demo_url}" target="_blank" rel="noopener" style="font-size:11px;color:#5B4FE9;text-decoration:none">▶ Video</a>`:''}</div>
+        <button class="btn-del" onclick="exRemoveItem('${clientId}','${exState.week}','${exState.day}','${e.exercise_id}')">×</button>
       </div>
       ${fieldsHtml}
     </div>`;
-  }).join(''):`<div class="empty-state">Sin ejercicios para ${exState.day}. Agrega desde la biblioteca abajo.</div>`;
+  }).join(''):`<div class="empty-state">Sin ejercicios para ${exState.day} esta semana. Agrega desde la biblioteca abajo, o copia la semana anterior.</div>`;
 
   return `
   <div class="dash-section">
     <div class="dash-section-title">Rutina — ${exFindClient(clientId)?.name||''}</div>
+    ${exWeekNavHtml(clientId)}
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${days}</div>
     <div style="display:flex;flex-direction:column;gap:8px">${rows}</div>
   </div>
   ${exRenderLibrary(clientId)}`;
 }
 
-function exUpdateField(clientId,day,exerciseId,field,value){
-  const arr=exState.routines[clientId]&&exState.routines[clientId][day];
+function exUpdateField(clientId,week,day,exerciseId,field,value){
+  const arr=exState.routines[clientId]&&exState.routines[clientId][week]&&exState.routines[clientId][week][day];
   if(!arr)return;
   const item=arr.find(e=>e.exercise_id===exerciseId);
   if(!item)return;
   const num=parseFloat(value)||0;
   item[field]=num;
-  const key='rf|'+clientId+'|'+day+'|'+exerciseId+'|'+field;
+  const key='rf|'+clientId+'|'+week+'|'+day+'|'+exerciseId+'|'+field;
   clearTimeout(exFieldTimers[key]);
   exFieldTimers[key]=setTimeout(()=>{
     const patch={};patch[field]=num;
-    SB.patch('routine_items',`client_id=eq.${clientId}&day=eq.${encodeURIComponent(day)}&exercise_id=eq.${exerciseId}`,patch);
+    SB.patch('routine_items',`client_id=eq.${clientId}&week_start=eq.${week}&day=eq.${encodeURIComponent(day)}&exercise_id=eq.${exerciseId}`,patch);
   },500);
 }
 
-function exAddItem(clientId,day,exerciseId){
+function exAddItem(clientId,week,day,exerciseId){
   exState.routines[clientId]=exState.routines[clientId]||{};
-  exState.routines[clientId][day]=exState.routines[clientId][day]||[];
-  const arr=exState.routines[clientId][day];
+  exState.routines[clientId][week]=exState.routines[clientId][week]||{};
+  exState.routines[clientId][week][day]=exState.routines[clientId][week][day]||[];
+  const arr=exState.routines[clientId][week][day];
   if(arr.some(e=>e.exercise_id===exerciseId))return;
   const isDist=exIsDistance(exFindExercise(exerciseId));
   const item=isDist?{exercise_id:exerciseId,sets:1,reps:0,weight:0,distance:3,duration:30}
                    :{exercise_id:exerciseId,sets:3,reps:10,weight:0,distance:0,duration:0};
   arr.push(item);
-  SB.post('routine_items',{client_id:clientId,day:day,...item});
+  SB.post('routine_items',{client_id:clientId,week_start:week,day:day,...item});
   renderExCoach();
 }
-function exRemoveItem(clientId,day,exerciseId){
-  const arr=exState.routines[clientId]&&exState.routines[clientId][day];
+function exRemoveItem(clientId,week,day,exerciseId){
+  const arr=exState.routines[clientId]&&exState.routines[clientId][week]&&exState.routines[clientId][week][day];
   if(!arr)return;
   const idx=arr.findIndex(e=>e.exercise_id===exerciseId);
   if(idx>=0)arr.splice(idx,1);
-  SB.del('routine_items',`client_id=eq.${clientId}&day=eq.${encodeURIComponent(day)}&exercise_id=eq.${exerciseId}`);
+  SB.del('routine_items',`client_id=eq.${clientId}&week_start=eq.${week}&day=eq.${encodeURIComponent(day)}&exercise_id=eq.${exerciseId}`);
   renderExCoach();
 }
 
@@ -4139,28 +4476,51 @@ function exRenderLibrary(clientId){
     const bySearch=!q||ex.name.toLowerCase().includes(q);
     return byGroup&&bySearch;
   });
-  const current=exRoutineFor(clientId,exState.day);
+  const current=exRoutineFor(clientId,exState.week,exState.day);
   const cards=list.length?list.map(ex=>{
     const already=current.some(e=>e.exercise_id===ex.id);
+    const isDist=exIsDistance(ex);
+    // Muchas máquinas marcan el peso en libras y otras en kg — se fija por
+    // ejercicio (no aplica a los que se registran por distancia/duración).
+    const unitToggle=isDist?'':`<div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+        <span style="font-size:10px;color:#ADAAB8">Unidad de peso:</span>
+        <button class="btn-sm${exWeightUnit(ex)==='kg'?' primary':''}" style="padding:3px 10px;font-size:11px" onclick="exSetExerciseUnit('${ex.id}','kg')">kg</button>
+        <button class="btn-sm${exWeightUnit(ex)==='lb'?' primary':''}" style="padding:3px 10px;font-size:11px" onclick="exSetExerciseUnit('${ex.id}','lb')">lb</button>
+      </div>`;
     return `<div class="backup-card" style="text-align:left;cursor:default">
       <div style="font-size:12.5px;font-weight:500">${ex.name}</div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px">
         <span class="medida-pill">${ex.muscle_group}</span>
         ${ex.demo_url?`<a href="${ex.demo_url}" target="_blank" rel="noopener" style="font-size:11px;color:#5B4FE9;text-decoration:none" onclick="event.stopPropagation()">▶ Video</a>`:''}
       </div>
-      <button class="btn-sm" style="margin-top:8px;width:100%;font-size:11px" onclick="exEditVideo('${ex.id}')">${ex.demo_url?'✎ Cambiar video':'🎥 Agregar video'}</button>
-      ${already?'<div style="font-size:11px;color:#17C39B;margin-top:8px">✓ Ya asignado (aún sin marcar como hecho)</div>':`<button class="btn-sm primary" style="margin-top:8px;width:100%" onclick="exAddItem('${clientId}','${exState.day}','${ex.id}')">+ Agregar</button>`}
+      ${unitToggle}
+      <button class="btn-sm" style="margin-top:8px;width:100%;font-size:11px" onclick="exEditVideo('${ex.id}')">${ex.demo_url?'✎ Cambiar video/GIF':'🎥 Agregar video/GIF'}</button>
+      ${already?'<div style="font-size:11px;color:#17C39B;margin-top:8px">✓ Ya asignado (aún sin marcar como hecho)</div>':`<button class="btn-sm primary" style="margin-top:8px;width:100%" onclick="exAddItem('${clientId}','${exState.week}','${exState.day}','${ex.id}')">+ Agregar</button>`}
     </div>`;
   }).join(''):'<div class="empty-state">No hay ejercicios para este filtro.</div>';
   return `
   <div class="chart-section">
-    <div class="chart-title">Biblioteca de ejercicios — agregar a ${exState.day}</div>
+    <div class="chart-title">Biblioteca de ejercicios — agregar a ${exState.day} (semana del ${weekRangeLabel(exState.week)})</div>
     <input type="text" id="ex-lib-search" placeholder="Buscar ejercicio" value="${exState.libSearch}" oninput="exSearchLib(this.value)" style="margin-bottom:10px;max-width:320px">
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${chips}</div>
     <div class="backup-grid">${cards}</div>
   </div>`;
 }
 function exFilterLib(g){exState.libGroup=g;renderExCoach();}
+// Cambia la unidad de peso de UN ejercicio del catálogo — no convierte
+// números ya registrados, solo cambia cómo se etiquetan de ahí en
+// adelante (ver comentario en exWeightUnit). Si ya hay peso registrado
+// con este ejercicio, avisa antes de cambiarla para que no se confunda.
+async function exSetExerciseUnit(exerciseId,unit){
+  const ex=exFindExercise(exerciseId);
+  if(!ex||exWeightUnit(ex)===unit)return;
+  const hasLogs=exState.logs.some(l=>l.exercise_id===exerciseId&&Number(l.weight)>0);
+  if(hasLogs&&!confirm(`Ya hay peso registrado para "${ex.name}" en ${exWeightUnit(ex)}. Cambiar la unidad a ${unit} NO convierte esos números — solo cambia cómo se etiquetan de ahora en adelante. ¿Continuar?`))return;
+  const result=await SB.patch('exercises',`id=eq.${exerciseId}`,{weight_unit:unit});
+  if(!result){alert('No se pudo cambiar la unidad. Verifica tu conexión e intenta de nuevo.');return;}
+  ex.weight_unit=unit;
+  renderExCoach();
+}
 async function exEditVideo(exerciseId){
   const ex=exFindExercise(exerciseId);
   const url=prompt('URL del video para "'+(ex?ex.name:exerciseId)+'" (deja vacío para quitar):',ex?.demo_url||'');
@@ -4176,7 +4536,7 @@ function exSearchLib(v){exState.libSearch=v;exReFocus('ex-lib-search',()=>render
 
 // ── EJERCICIO: BALANCE SEMANAL ────────────────────────────────
 function exCalcBalance(clientId){
-  const routines=exState.routines[clientId]||{};
+  const routines=(exState.routines[clientId]&&exState.routines[clientId][exState.week])||{};
   const totals={};EX_GROUPS.forEach(g=>totals[g]=0);
   let total=0;
   Object.keys(routines).forEach(day=>{
@@ -4192,7 +4552,7 @@ function exCalcWeeklyGrid(clientId,mode){
   const grid={};EX_GROUPS.forEach(g=>grid[g]=EX_DAYS.map(()=>0));
   let max=0;
   if(mode==='planned'){
-    const routines=exState.routines[clientId]||{};
+    const routines=(exState.routines[clientId]&&exState.routines[clientId][exState.week])||{};
     EX_DAYS.forEach((day,di)=>{
       (routines[day]||[]).forEach(e=>{
         const ex=exFindExercise(e.exercise_id);if(!ex)return;
@@ -4239,7 +4599,8 @@ function exRenderBalance(){
   }else if(b.total===0){
     warning='<div class="empty-state">Sin ejercicios asignados esta semana — el balance se calcula sobre la rutina completa.</div>';
   }
-  return exRenderWeeklyGrid(exCalcWeeklyGrid(clientId,'planned'),'Planificación semanal por grupo muscular')+
+  return `<div class="dash-section">${exWeekNavHtml(null)}</div>`+
+    exRenderWeeklyGrid(exCalcWeeklyGrid(clientId,'planned'),'Planificación de la semana del '+weekRangeLabel(exState.week)+' por grupo muscular')+
     `<div class="dash-section"><div class="dash-section-title">Distribución total de la semana</div>${rows}</div>`+warning;
 }
 
@@ -4276,7 +4637,7 @@ function exRenderHistorial(clientId){
     });
     const rows=entries.map(l=>{
       const ex=exFindExercise(l.exercise_id);
-      const detail=exIsDistance(ex)?`Sesión ${l.set_index+1} · ${l.distance} km · ${l.duration} min`:`Serie ${l.set_index+1} · ${l.reps} reps · ${l.weight} kg`;
+      const detail=exIsDistance(ex)?`Sesión ${l.set_index+1} · ${l.distance} km · ${l.duration} min`:`Serie ${l.set_index+1} · ${l.reps} reps · ${l.weight} ${exWeightUnit(ex)}`;
       return `<div class="ex-log-row">
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:500">${ex?ex.name:l.exercise_id}</div>
@@ -4302,13 +4663,21 @@ function exSetClientView(v){exState.view=v;renderExClient();}
 
 function exRenderEntreno(){
   const clientId=PROFILE.id;
-  const t=today();
+  // "t" es la fecha REAL del día que se está viendo (el día de la pestaña,
+  // dentro de la semana seleccionada) — antes esto era siempre today(), así
+  // que cambiar de pestaña de día (Lun..Dom) mostraba la rutina asignada
+  // correcta, pero los registros/checks buscaban SIEMPRE los de hoy, sin
+  // importar qué día se estuviera mirando.
+  const isCurrentWeek=exState.week===mondayOf(today());
+  const weekDates=weekDatesFrom(exState.week);
+  const t=weekDates[EX_DAYS.indexOf(exState.day)]||today();
+  const isToday=t===today();
   const days=EX_DAYS.map(d=>`<button class="chart-tab${d===exState.day?' active':''}" onclick="exSelectDay('${d}')">${d}</button>`).join('');
-  const arr=exRoutineFor(clientId,exState.day).slice();
+  const arr=exRoutineFor(clientId,exState.week,exState.day).slice();
   // Sesiones registradas hoy desde la Biblioteca (registro rápido) que no
   // están asignadas a la rutina de hoy — antes quedaban guardadas pero
   // invisibles en "Entreno de hoy", pareciendo que nunca se habían guardado.
-  if(exState.day===dayLabel(t)){
+  if(isToday){
     const assignedIds=new Set(arr.map(e=>e.exercise_id));
     const adHocIds=[...new Set(exState.logs.filter(l=>l.client_id===clientId&&l.date===t&&!assignedIds.has(l.exercise_id)).map(l=>l.exercise_id))];
     adHocIds.forEach(id=>arr.push({exercise_id:id,sets:0,reps:0,weight:0,distance:0,duration:0,adHoc:true}));
@@ -4327,7 +4696,7 @@ function exRenderEntreno(){
       </div>`:`<div style="display:grid;grid-template-columns:36px 1fr 1fr 40px;gap:8px;padding:0 2px;margin-bottom:6px">
         <span style="font-size:10px;color:#ADAAB8">Serie</span>
         <span style="font-size:10px;color:#ADAAB8">Reps</span>
-        <span style="font-size:10px;color:#ADAAB8">Kg</span>
+        <span style="font-size:10px;color:#ADAAB8">${exWeightUnit(ex).toUpperCase()}</span>
         <span style="font-size:10px;color:#ADAAB8;text-align:center">✓</span>
       </div>`;
     for(let i=0;i<totalSets;i++){
@@ -4355,9 +4724,9 @@ function exRenderEntreno(){
           delta='';
         }else if(done){
           const dw=Math.round((Number(logged.weight)-Number(e.weight))*10)/10;
-          delta=dw===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dw>0?'#17C39B':'#DC3B3B'}">${dw>0?'+':''}${dw}kg</span>`;
+          delta=dw===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dw>0?'#17C39B':'#DC3B3B'}">${dw>0?'+':''}${dw}${exWeightUnit(ex)}</span>`;
         }else{
-          delta=`<span style="font-size:11px;color:#ADAAB8">meta ${e.reps}×${e.weight}kg</span>`;
+          delta=`<span style="font-size:11px;color:#ADAAB8">meta ${e.reps}×${e.weight}${exWeightUnit(ex)}</span>`;
         }
         setsHtml+=`<div style="display:grid;grid-template-columns:36px 1fr 1fr 40px;gap:8px;align-items:center;margin-bottom:2px">
           <span style="font-size:13px;font-weight:600;color:#4B3FBF;text-align:center">${i+1}</span>
@@ -4368,7 +4737,7 @@ function exRenderEntreno(){
         <div style="text-align:right;font-size:11px;margin:-2px 0 8px" id="ex-delta-${clientId}-${e.exercise_id}-${t}-${i}">${delta}</div>`;
       }
     }
-    const asignadoPill=e.adHoc?'Registro libre (no asignado a la rutina)':(isDist?`Asignado: ${e.distance} km · ${e.duration} min`:`Asignado: ${e.sets} series × ${e.reps} reps · ${e.weight} kg`);
+    const asignadoPill=e.adHoc?'Registro libre (no asignado a la rutina)':(isDist?`Asignado: ${e.distance} km · ${e.duration} min`:`Asignado: ${e.sets} series × ${e.reps} reps · ${e.weight} ${exWeightUnit(ex)}`);
     return `<div class="meal-section">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px">
         <div>
@@ -4382,8 +4751,8 @@ function exRenderEntreno(){
       </div>${setsHtml}
       <button class="btn-sm" style="width:100%;margin-top:4px" onclick="exAddExtraSet('${clientId}','${e.exercise_id}','${t}',${totalSets},${e.weight},${e.reps},${e.distance},${e.duration})">${isDist?'+ Agregar sesión':'+ Agregar serie'}</button>
       </div>`;
-  }).join(''):`<div class="empty-state">No hay rutina asignada para ${exState.day}.</div>`;
-  const calBurnedWidget=exState.day===dayLabel(t)?`<div class="chart-section" style="padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  }).join(''):`<div class="empty-state">No hay rutina asignada para ${exState.day}${isCurrentWeek?'':' en la semana del '+weekRangeLabel(exState.week)}.</div>`;
+  const calBurnedWidget=isToday?`<div class="chart-section" style="padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <span style="font-size:18px">🔥</span>
     <div style="flex:1;min-width:180px">
       <div style="font-size:12.5px;font-weight:500">Calorías quemadas hoy</div>
@@ -4393,7 +4762,7 @@ function exRenderEntreno(){
     <button class="btn-sm primary" onclick="exSubmitCalBurned('${clientId}')">Guardar</button>
     <span class="save-msg" id="ex-cal-burned-msg">✓ Guardado</span>
   </div>`:'';
-  return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${days}</div>${calBurnedWidget}${cards}`;
+  return `${exWeekNavHtml(null)}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">${days}</div>${calBurnedWidget}${cards}`;
 }
 
 function exToggleSet(clientId,exerciseId,date,setIndex,defW,defR,defDist,defDur){
@@ -4458,7 +4827,7 @@ function exSetLogDuration(clientId,exerciseId,date,setIndex,value){
 // Refresca solo el texto "= objetivo / +X / -X" de una serie sin
 // re-renderizar toda la tarjeta (evita perder el foco mientras se escribe).
 function exUpdateDelta(clientId,exerciseId,date,setIndex){
-  const arr=exRoutineFor(clientId,exState.day);
+  const arr=exRoutineFor(clientId,exState.week,exState.day);
   const e=arr.find(x=>x.exercise_id===exerciseId);
   const ex=exFindExercise(exerciseId);
   const el=document.getElementById(`ex-delta-${clientId}-${exerciseId}-${date}-${setIndex}`);
@@ -4470,9 +4839,9 @@ function exUpdateDelta(clientId,exerciseId,date,setIndex){
     el.innerHTML=dd===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dd>0?'#17C39B':'#DC3B3B'}">${dd>0?'+':''}${dd}km</span>`;
     return;
   }
-  if(!logged){el.innerHTML=`<span style="font-size:11px;color:#ADAAB8">meta ${e.reps}×${e.weight}kg</span>`;return;}
+  if(!logged){el.innerHTML=`<span style="font-size:11px;color:#ADAAB8">meta ${e.reps}×${e.weight}${exWeightUnit(ex)}</span>`;return;}
   const dw=Math.round((Number(logged.weight)-Number(e.weight))*10)/10;
-  el.innerHTML=dw===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dw>0?'#17C39B':'#DC3B3B'}">${dw>0?'+':''}${dw}kg</span>`;
+  el.innerHTML=dw===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dw>0?'#17C39B':'#DC3B3B'}">${dw>0?'+':''}${dw}${exWeightUnit(ex)}</span>`;
 }
 
 // Últimas n semanas (lunes a domingo), de la más antigua a la más reciente.
@@ -4578,13 +4947,14 @@ function exRenderBiblioteca(){
     return byGroup&&bySearch;
   });
   const todayDay=dayLabel(today());
-  const todayPlan=exRoutineFor(PROFILE.id,todayDay);
+  const todayPlan=exRoutineFor(PROFILE.id,mondayOf(today()),todayDay);
 
   const addForm=exState.bibAddOpen?`<div class="manual-block open" style="margin-bottom:14px">
-    <div style="display:grid;grid-template-columns:1fr 140px 160px;gap:8px">
+    <div style="display:grid;grid-template-columns:1fr 140px 160px 90px;gap:8px">
       <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:3px">Nombre del ejercicio</label><input type="text" id="ex-new-name" placeholder="Ej: Zumba, Yoga, Caminata..."></div>
       <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:3px">Grupo muscular</label><select id="ex-new-group">${EX_GROUPS.map(g=>`<option value="${g}">${g}</option>`).join('')}</select></div>
       <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:3px">Se registra en</label><select id="ex-new-logtype"><option value="reps">Series / reps / peso</option><option value="distance">Distancia / duración</option></select></div>
+      <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:3px">Unidad</label><select id="ex-new-unit"><option value="kg">kg</option><option value="lb">lb</option></select></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button class="btn-sm primary" onclick="exAddCustomExercise()">Guardar ejercicio</button>
@@ -4604,7 +4974,7 @@ function exRenderBiblioteca(){
         <div><label style="font-size:10px;color:#8B8896;display:block;margin-bottom:2px">Km</label><input type="number" step="0.1" min="0" id="ql-dist-${ex.id}"></div>
         <div><label style="font-size:10px;color:#8B8896;display:block;margin-bottom:2px">Min</label><input type="number" step="1" min="0" id="ql-dur-${ex.id}"></div>
         `:`
-        <div><label style="font-size:10px;color:#8B8896;display:block;margin-bottom:2px">Kg</label><input type="number" step="0.5" min="0" id="ql-kg-${ex.id}"></div>
+        <div><label style="font-size:10px;color:#8B8896;display:block;margin-bottom:2px">${exWeightUnit(ex).toUpperCase()}</label><input type="number" step="0.5" min="0" id="ql-kg-${ex.id}"></div>
         <div><label style="font-size:10px;color:#8B8896;display:block;margin-bottom:2px">Reps</label><input type="number" step="1" min="0" id="ql-reps-${ex.id}"></div>
         `}
       </div>
@@ -4650,15 +5020,17 @@ function exToggleBibAdd(){exState.bibAddOpen=!exState.bibAddOpen;renderExClient(
 // tendencias solo cuando de verdad se hizo, no al agregarlo.
 async function exClientAddToPlan(exerciseId){
   const clientId=PROFILE.id;
+  const week=mondayOf(today());
   const day=dayLabel(today());
   exState.routines[clientId]=exState.routines[clientId]||{};
-  exState.routines[clientId][day]=exState.routines[clientId][day]||[];
-  const arr=exState.routines[clientId][day];
+  exState.routines[clientId][week]=exState.routines[clientId][week]||{};
+  exState.routines[clientId][week][day]=exState.routines[clientId][week][day]||[];
+  const arr=exState.routines[clientId][week][day];
   if(arr.some(e=>e.exercise_id===exerciseId))return;
   const isDist=exIsDistance(exFindExercise(exerciseId));
   const item=isDist?{exercise_id:exerciseId,sets:1,reps:0,weight:0,distance:3,duration:30}
                    :{exercise_id:exerciseId,sets:3,reps:10,weight:0,distance:0,duration:0};
-  const result=await SB.post('routine_items',{client_id:clientId,day:day,...item});
+  const result=await SB.post('routine_items',{client_id:clientId,week_start:week,day:day,...item});
   if(!result){alert('No se pudo agregar a tu plan de hoy.'+(SB.lastError?' Detalle: '+SB.lastError:' Verifica tu conexión e intenta de nuevo.'));return;}
   arr.push(item);
   exState.view='entreno';
@@ -4675,7 +5047,8 @@ async function exAddCustomExercise(){
   let id=exSlug(name);
   if((EXERCISES_CACHE||[]).some(e=>e.id===id))id+='-'+Date.now().toString(36).slice(-4);
   try{
-    const result=await SB.post('exercises',{id,name,muscle_group:groupEl?.value||EX_GROUPS[0],log_type:logTypeEl?.value||'reps',created_by:PROFILE.id});
+    const unitEl=document.getElementById('ex-new-unit');
+    const result=await SB.post('exercises',{id,name,muscle_group:groupEl?.value||EX_GROUPS[0],log_type:logTypeEl?.value||'reps',weight_unit:unitEl?.value||'kg',created_by:PROFILE.id});
     const row=Array.isArray(result)?result[0]:result;
     // SB.lastError trae el motivo real (permiso de Supabase, columna
     // faltante, etc.) — mostrarlo aquí es lo que permite diagnosticar sin
