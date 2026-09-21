@@ -4115,6 +4115,7 @@ let exState={
   day:dayLabel(today()),
   week:mondayOf(today()), // lunes de la semana que se está viendo — permite que cada semana tenga su propia rutina
   view:'rutina', // coach: rutina|balance — cliente: entreno|biblioteca|historial
+  balanceMode:'planned', // balance semanal: planned (lo asignado) | real (lo efectivamente completado, según sus registros)
   libGroup:'Todos',
   libSearch:'',
   bibGroup:'Todos',
@@ -4535,17 +4536,29 @@ async function exEditVideo(exerciseId){
 function exSearchLib(v){exState.libSearch=v;exReFocus('ex-lib-search',()=>renderExCoach());}
 
 // ── EJERCICIO: BALANCE SEMANAL ────────────────────────────────
-function exCalcBalance(clientId){
-  const routines=(exState.routines[clientId]&&exState.routines[clientId][exState.week])||{};
+function exCalcBalance(clientId,mode){
   const totals={};EX_GROUPS.forEach(g=>totals[g]=0);
   let total=0;
-  Object.keys(routines).forEach(day=>{
-    routines[day].forEach(e=>{
-      const ex=exFindExercise(e.exercise_id);if(!ex)return;
-      totals[ex.muscle_group]=(totals[ex.muscle_group]||0)+(Number(e.sets)||0);
-      total+=Number(e.sets)||0;
+  if(mode==='real'){
+    // "Real" cuenta cada serie efectivamente registrada (workout_logs) en
+    // los 7 días de la semana que se está viendo — no lo asignado, sino lo
+    // que la clienta de verdad marcó como hecho.
+    const weekDates=weekDatesFrom(exState.week);
+    exState.logs.filter(l=>l.client_id===clientId&&weekDates.includes(l.date)).forEach(l=>{
+      const ex=exFindExercise(l.exercise_id);if(!ex)return;
+      totals[ex.muscle_group]=(totals[ex.muscle_group]||0)+1;
+      total+=1;
     });
-  });
+  }else{
+    const routines=(exState.routines[clientId]&&exState.routines[clientId][exState.week])||{};
+    Object.keys(routines).forEach(day=>{
+      routines[day].forEach(e=>{
+        const ex=exFindExercise(e.exercise_id);if(!ex)return;
+        totals[ex.muscle_group]=(totals[ex.muscle_group]||0)+(Number(e.sets)||0);
+        total+=Number(e.sets)||0;
+      });
+    });
+  }
   return {total,rows:EX_GROUPS.map(g=>({group:g,pct:total?Math.round(totals[g]/total*100):0})).sort((a,b)=>b.pct-a.pct)};
 }
 function exCalcWeeklyGrid(clientId,mode){
@@ -4561,7 +4574,11 @@ function exCalcWeeklyGrid(clientId,mode){
       });
     });
   }else{
-    const weekDates=exCurrentWeekDates();
+    // "Real": cada fila de workout_logs es UNA serie efectivamente
+    // registrada — se cuentan sobre los 7 días de la semana que se está
+    // viendo (exState.week), no siempre la semana de hoy, para que
+    // coincida con la navegación de semanas del resto de la pestaña.
+    const weekDates=weekDatesFrom(exState.week);
     exState.logs.filter(l=>l.client_id===clientId).forEach(l=>{
       const di=weekDates.indexOf(l.date);if(di===-1)return;
       const ex=exFindExercise(l.exercise_id);if(!ex)return;
@@ -4584,24 +4601,35 @@ function exRenderWeeklyGrid(gridData,title){
   }).join('');
   return `<div class="chart-section"><div class="chart-title">${title}</div>${header}${rows}</div>`;
 }
+function exSetBalanceMode(mode){exState.balanceMode=mode;renderExCoach();}
 function exRenderBalance(){
   const clientId=exState.coachClientId;
-  const b=exCalcBalance(clientId);
-  const rows=b.rows.map(r=>`<div class="macro-bar-row"><div class="macro-bar-label">${r.group}</div><div><div class="macro-bar-bg"><div class="macro-bar-fill" style="width:${r.pct}%;background:#5B4FE9"></div></div></div><div class="macro-bar-pct">${r.pct}%</div></div>`).join('');
+  const mode=exState.balanceMode;
+  const isReal=mode==='real';
+  const b=exCalcBalance(clientId,mode);
+  const modeToggle=`<div class="chart-tabs" style="margin-bottom:10px">
+    <button class="chart-tab${!isReal?' active':''}" onclick="exSetBalanceMode('planned')">Planificado</button>
+    <button class="chart-tab${isReal?' active':''}" onclick="exSetBalanceMode('real')">Real (completado)</button>
+  </div>`;
+  const rows=b.rows.map(r=>`<div class="macro-bar-row"><div class="macro-bar-label">${r.group}</div><div><div class="macro-bar-bg"><div class="macro-bar-fill" style="width:${r.pct}%;background:${isReal?'#17C39B':'#5B4FE9'}"></div></div></div><div class="macro-bar-pct">${r.pct}%</div></div>`).join('');
   const covered=b.rows.filter(r=>r.pct>0);
   const missing=b.rows.filter(r=>r.pct===0).map(r=>r.group);
   let warning='';
-  if(b.total>0&&missing.length>=4){
+  if(!isReal&&b.total>0&&missing.length>=4){
     warning=`<div class="dash-section" style="border-color:#F6C9C2;background:#FDEDEA">
       <div style="font-size:13px;font-weight:600;color:#DC3B3B">⚠ Desbalance para el objetivo full body</div>
       <div style="font-size:12px;color:#6B6878;margin-top:6px;line-height:1.5">El volumen de la semana está concentrado en ${covered.map(r=>r.group.toLowerCase()).join(' y ')}. No se trabajó: ${missing.map(g=>g.toLowerCase()).join(', ')}. Considerá redistribuir ejercicios para un entreno más equilibrado.</div>
     </div>`;
   }else if(b.total===0){
-    warning='<div class="empty-state">Sin ejercicios asignados esta semana — el balance se calcula sobre la rutina completa.</div>';
+    warning=`<div class="empty-state">${isReal?'Aún no hay series registradas esta semana — el balance real se calcula sobre lo que la clienta marcó como completado.':'Sin ejercicios asignados esta semana — el balance se calcula sobre la rutina completa.'}</div>`;
   }
+  const gridTitle=isReal
+    ?'Volumen real completado la semana del '+weekRangeLabel(exState.week)+' por grupo muscular'
+    :'Planificación de la semana del '+weekRangeLabel(exState.week)+' por grupo muscular';
   return `<div class="dash-section">${exWeekNavHtml(null)}</div>`+
-    exRenderWeeklyGrid(exCalcWeeklyGrid(clientId,'planned'),'Planificación de la semana del '+weekRangeLabel(exState.week)+' por grupo muscular')+
-    `<div class="dash-section"><div class="dash-section-title">Distribución total de la semana</div>${rows}</div>`+warning;
+    `<div class="dash-section">${modeToggle}</div>`+
+    exRenderWeeklyGrid(exCalcWeeklyGrid(clientId,mode),gridTitle)+
+    `<div class="dash-section"><div class="dash-section-title">Distribución total de la semana${isReal?' (real)':''}</div>${rows}</div>`+warning;
 }
 
 // ── EJERCICIO: CLIENTA ────────────────────────────────────────
