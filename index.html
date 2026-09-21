@@ -4459,13 +4459,32 @@ function exAddItem(clientId,week,day,exerciseId){
   SB.post('routine_items',{client_id:clientId,week_start:week,day:day,...item});
   renderExCoach();
 }
-function exRemoveItem(clientId,week,day,exerciseId){
+// Lógica compartida de "quitar ejercicio de la rutina" — SIN el re-render,
+// para que tanto la coach (admin) como la propia clienta puedan reusarla y
+// cada una repinte SU pantalla correspondiente (renderExCoach vs
+// renderExClient), sin arriesgarse a que una llame a la vista de la otra.
+function exRemoveItemCore(clientId,week,day,exerciseId){
   const arr=exState.routines[clientId]&&exState.routines[clientId][week]&&exState.routines[clientId][week][day];
   if(!arr)return;
   const idx=arr.findIndex(e=>e.exercise_id===exerciseId);
   if(idx>=0)arr.splice(idx,1);
   SB.del('routine_items',`client_id=eq.${clientId}&week_start=eq.${week}&day=eq.${encodeURIComponent(day)}&exercise_id=eq.${exerciseId}`);
+}
+function exRemoveItem(clientId,week,day,exerciseId){
+  exRemoveItemCore(clientId,week,day,exerciseId);
   renderExCoach();
+}
+// La clienta puede quitar CUALQUIER ejercicio de su propio "Entreno de hoy"
+// (asignado por la coach o agregado por ella misma desde Biblioteca) — solo
+// desasigna (borra el routine_item de esa semana/día), NO borra sets ya
+// registrados: si ya marcó series como hechas, ese historial se mantiene
+// intacto en Historial, solo desaparece de la vista de hoy.
+function exClientRemoveItem(exerciseId){
+  const clientId=PROFILE.id;
+  const ex=exFindExercise(exerciseId);
+  if(!confirm(`¿Quitar "${ex?ex.name:exerciseId}" de tu entreno de ${exState.day}? Los registros que ya hayas guardado para este ejercicio no se pierden.`))return;
+  exRemoveItemCore(clientId,exState.week,exState.day,exerciseId);
+  renderExClient();
 }
 
 function exRenderLibrary(clientId){
@@ -4775,7 +4794,10 @@ function exRenderEntreno(){
           </div>
           ${exDemoMediaHtml(ex?.demo_url)}
         </div>
-        <span class="medida-pill">${ex?ex.muscle_group:''}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <span class="medida-pill">${ex?ex.muscle_group:''}</span>
+          ${e.adHoc?'':`<button class="btn-del" title="Quitar de tu entreno de ${exState.day}" onclick="exClientRemoveItem('${e.exercise_id}')">×</button>`}
+        </div>
       </div>${setsHtml}
       <button class="btn-sm" style="width:100%;margin-top:4px" onclick="exAddExtraSet('${clientId}','${e.exercise_id}','${t}',${totalSets},${e.weight},${e.reps},${e.distance},${e.duration})">${isDist?'+ Agregar sesión':'+ Agregar serie'}</button>
       </div>`;
