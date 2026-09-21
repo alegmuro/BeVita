@@ -1113,9 +1113,10 @@ function getAutoProfileId(){
 }
 
 function switchAccount(){
-  // Este link solo es visible en modo 'manual' (ver selectProfile) — cuando
-  // se llegó por link personal o perfil recordado, el link ni aparece, así
-  // que esta función nunca corre en ese caso.
+  // Este link solo es visible en modo 'manual', o si el perfil actual es
+  // admin (ver selectProfile) — un cliente que entró por link personal o
+  // perfil recordado nunca lo ve, así que para clientes esta función nunca
+  // corre en ese caso. Para la coach sí queda siempre disponible.
   LS.del(LAST_PROFILE_KEY);
   pendingProfileId=null;
   hideAllScreens();
@@ -1159,12 +1160,16 @@ function selectProfile(id,mode){
   document.getElementById('pin-error').textContent='';
   // Por link personal o perfil recordado: no mostramos forma de volver a la
   // lista completa — eso expondría a las demás personas. En su lugar, un
-  // texto informativo sin acción.
+  // texto informativo sin acción. Excepción: la propia coach (is_admin) ya
+  // ve a todos sus clientes desde su panel, así que no hay nada que
+  // proteger si ELLA cambia de cuenta — se le deja el atajo siempre, para
+  // que pueda probar cuentas de clientes desde su mismo dispositivo.
   const switchWrap=document.getElementById('switch-account-wrap');
   if(switchWrap){
-    switchWrap.innerHTML=lockEntryMode==='auto'
-      ?'<span style="font-size:11px;color:#ADAAB8">¿Problemas para entrar? Contacta a tu coach.</span>'
-      :'<a href="#" onclick="switchAccount();return false" style="font-size:11px;color:#ADAAB8;text-decoration:underline">¿No eres tú? Cambiar cuenta</a>';
+    const canSwitch=lockEntryMode==='manual'||p.is_admin;
+    switchWrap.innerHTML=canSwitch
+      ?'<a href="#" onclick="switchAccount();return false" style="font-size:11px;color:#ADAAB8;text-decoration:underline">¿No eres tú? Cambiar cuenta</a>'
+      :'<span style="font-size:11px;color:#ADAAB8">¿Problemas para entrar? Contacta a tu coach.</span>';
   }
   hideAllScreens();
   document.getElementById('lock-screen').style.display='flex';
