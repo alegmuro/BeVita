@@ -132,7 +132,7 @@ body{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI'
 .food-row.header-row{font-size:10px;color:#ADAAB8;text-transform:uppercase;letter-spacing:0.05em;padding:0 0 6px;border-bottom:0.5px solid #E7E5EF}
 .food-row.header-row span{text-align:center}
 .food-row.header-row span:first-child{text-align:left}
-select,input[type=number],input[type=text],input[type=date],textarea{width:100%;font-size:12px;padding:4px 6px;border:0.5px solid #E7E5EF;border-radius:6px;background:#fff;color:#17171A}
+select,input[type=number],input[type=text],input[type=date],input[type=email],textarea{width:100%;font-size:12px;padding:4px 6px;border:0.5px solid #E7E5EF;border-radius:6px;background:#fff;color:#17171A}
 input[type=number]{text-align:center}
 .cell-val{font-size:12px;color:#4B4855;text-align:center}
 .btn-del{background:none;border:none;color:#C7C4D6;cursor:pointer;font-size:15px;padding:2px;border-radius:4px}
@@ -395,6 +395,7 @@ canvas{display:block;width:100%;max-width:100%}
       <div class="step-dot active" id="sdot-0"></div>
       <div class="step-dot" id="sdot-1"></div>
       <div class="step-dot" id="sdot-2"></div>
+      <div class="step-dot" id="sdot-3"></div>
     </div>
 
     <!-- Step 0: Name + color + PIN -->
@@ -443,8 +444,37 @@ canvas{display:block;width:100%;max-width:100%}
       <div style="font-size:11px;color:#DC3B3B;margin-top:8px;min-height:16px;text-align:center" id="setup-error-0"></div>
     </div>
 
-    <!-- Step 1: InBody upload -->
+    <!-- Step 1: Sobre ti (datos del perfil) -->
     <div class="setup-step" id="step-1">
+      <div class="setup-title">Sobre ti 📋</div>
+      <div class="setup-sub">Así tu coach puede conocerte y darte seguimiento</div>
+      <div class="setup-grid">
+        <div class="setup-field"><label>Apellido</label><input type="text" id="setup-apellido" placeholder="Tu apellido"></div>
+        <div class="setup-field"><label>Correo</label><input type="email" id="setup-correo" placeholder="tucorreo@ejemplo.com"></div>
+      </div>
+      <div class="setup-section" style="margin-top:12px">
+        <div class="setup-label">Fecha de nacimiento</div>
+        <input type="date" id="setup-nacimiento">
+      </div>
+      <div class="setup-section">
+        <div class="setup-label">Propósito en la app</div>
+        <select id="setup-proposito" onchange="document.getElementById('setup-proposito-otro').style.display=this.value==='Otro'?'':'none'">
+          <option value="">Selecciona...</option>
+          <option>Bajar de peso</option>
+          <option>Ganar masa muscular</option>
+          <option>Mejorar hábitos y bienestar</option>
+          <option>Rendimiento deportivo</option>
+          <option>Recuperación / rehabilitación</option>
+          <option>Otro</option>
+        </select>
+        <input type="text" id="setup-proposito-otro" placeholder="Cuéntanos cuál" style="display:none;margin-top:6px">
+      </div>
+      <button class="btn-sm primary" style="width:100%;padding:10px;font-size:14px;margin-top:8px" onclick="goStep(2)">Continuar →</button>
+      <div style="font-size:11px;color:#DC3B3B;margin-top:8px;min-height:16px;text-align:center" id="setup-error-1"></div>
+    </div>
+
+    <!-- Step 2: InBody upload -->
+    <div class="setup-step" id="step-2">
       <div class="setup-title">Tu InBody 📊</div>
       <div class="setup-sub">Sube una foto de tu resultado InBody — Claude leerá los datos y calculará tus metas automáticamente</div>
 
@@ -492,13 +522,13 @@ canvas{display:block;width:100%;max-width:100%}
       </div>
 
       <div id="step1-actions" style="display:none;margin-top:12px">
-        <button class="btn-sm primary" style="width:100%;padding:10px;font-size:14px" onclick="goStep(2)">Usar estas metas →</button>
+        <button class="btn-sm primary" style="width:100%;padding:10px;font-size:14px" onclick="goStep(3)">Usar estas metas →</button>
       </div>
       <span class="skip-link" onclick="skipInBody()">Saltar por ahora — configurar metas manualmente</span>
     </div>
 
-    <!-- Step 2: Manual fallback or confirm -->
-    <div class="setup-step" id="step-2">
+    <!-- Step 3: Manual fallback or confirm -->
+    <div class="setup-step" id="step-3">
       <div class="setup-title">Metas diarias ✅</div>
       <div class="setup-sub" id="step2-sub">Confirma o ajusta tus metas de macros</div>
       <div class="setup-grid" style="margin-top:12px">
@@ -553,7 +583,7 @@ canvas{display:block;width:100%;max-width:100%}
       <button class="pin-key" onclick="pinKey('ok')" style="background:#17171A;color:#fff;border-color:#17171A">OK</button>
     </div>
     <div class="pin-error" id="pin-error"></div>
-    <div style="text-align:center;margin-top:16px"><a href="#" onclick="switchAccount();return false" style="font-size:11px;color:#ADAAB8;text-decoration:underline">¿No eres tú? Cambiar cuenta</a></div>
+    <div style="text-align:center;margin-top:16px" id="switch-account-wrap"><a href="#" onclick="switchAccount();return false" style="font-size:11px;color:#ADAAB8;text-decoration:underline">¿No eres tú? Cambiar cuenta</a></div>
   </div>
 </div>
 
@@ -564,7 +594,7 @@ canvas{display:block;width:100%;max-width:100%}
     <div style="font-size:38px;margin-bottom:10px" id="blocked-icon">⏳</div>
     <div style="font-size:16px;font-weight:600;margin-bottom:8px" id="blocked-title"></div>
     <div style="font-size:13px;color:#6B6878;line-height:1.5;margin-bottom:20px" id="blocked-msg"></div>
-    <button class="btn-sm" style="width:100%;padding:10px" onclick="hideAllScreens();showSelectScreen()">← Volver</button>
+    <button class="btn-sm" style="width:100%;padding:10px" onclick="volverDesdeBlocked()">← Volver</button>
   </div>
 </div>
 
@@ -1031,6 +1061,12 @@ const ibKey='pt_inbody';
 // ── STATE ADDITIONS ───────────────────────────────────────────
 let ALL_PROFILES=[];
 let pendingProfileId=null;
+// 'manual' = llegó eligiendo su nombre de la lista completa (link general,
+// primera visita, sin perfil recordado) — ya vio la lista, no hay nada que
+// proteger si vuelve a ella. 'auto' = llegó por link personal (?p=<id>) o
+// porque el dispositivo recuerda su perfil — NUNCA debe poder ver la lista
+// completa de las demás personas desde acá.
+let lockEntryMode='manual';
 
 // ── INIT ──────────────────────────────────────────────────────
 async function init(){
@@ -1050,7 +1086,7 @@ async function init(){
     hideOverlay();
     if(!ALL_PROFILES||ALL_PROFILES.length===0){showNewProfileSetup();return;}
     const autoId=getAutoProfileId();
-    if(autoId){selectProfile(autoId);return;}
+    if(autoId){selectProfile(autoId,'auto');return;}
     showSelectScreen();
   }catch(e){
     hideOverlay();
@@ -1077,10 +1113,28 @@ function getAutoProfileId(){
 }
 
 function switchAccount(){
+  // Este link solo es visible en modo 'manual' (ver selectProfile) — cuando
+  // se llegó por link personal o perfil recordado, el link ni aparece, así
+  // que esta función nunca corre en ese caso.
   LS.del(LAST_PROFILE_KEY);
   pendingProfileId=null;
   hideAllScreens();
   showSelectScreen();
+}
+
+// Botón "Volver" de la pantalla de bloqueo (aprobación pendiente / acceso
+// vencido). Igual que en el candado: si se llegó por link personal o
+// perfil recordado, nunca debe terminar mostrando la lista completa de
+// perfiles — vuelve a la pantalla de PIN de esa misma persona.
+function volverDesdeBlocked(){
+  hideAllScreens();
+  if(lockEntryMode==='auto'&&pendingProfileId){
+    document.getElementById('lock-screen').style.display='flex';
+    pinBuf='';updatePinDots();
+    document.getElementById('pin-error').textContent='';
+  }else{
+    showSelectScreen();
+  }
 }
 
 function showSelectScreen(){
@@ -1094,14 +1148,24 @@ function showSelectScreen(){
     </div>`).join('');
 }
 
-function selectProfile(id){
+function selectProfile(id,mode){
   pendingProfileId=id;
+  lockEntryMode=mode==='auto'?'auto':'manual';
   const p=ALL_PROFILES.find(x=>x.id===id);
   document.getElementById('lock-avatar').textContent=p.initials;
   document.getElementById('lock-avatar').style.background=p.color;
   document.getElementById('lock-name').textContent=p.name;
   pinBuf='';updatePinDots();
   document.getElementById('pin-error').textContent='';
+  // Por link personal o perfil recordado: no mostramos forma de volver a la
+  // lista completa — eso expondría a las demás personas. En su lugar, un
+  // texto informativo sin acción.
+  const switchWrap=document.getElementById('switch-account-wrap');
+  if(switchWrap){
+    switchWrap.innerHTML=lockEntryMode==='auto'
+      ?'<span style="font-size:11px;color:#ADAAB8">¿Problemas para entrar? Contacta a tu coach.</span>'
+      :'<a href="#" onclick="switchAccount();return false" style="font-size:11px;color:#ADAAB8;text-decoration:underline">¿No eres tú? Cambiar cuenta</a>';
+  }
   hideAllScreens();
   document.getElementById('lock-screen').style.display='flex';
 }
@@ -1173,10 +1237,19 @@ function goStep(n){
     if(setupPinBuf.length!==4){errEl.textContent='El PIN debe tener exactamente 4 dígitos.';return;}
     errEl.textContent='';
   }
+  if(n===2){
+    const apellido=document.getElementById('setup-apellido').value.trim();
+    const propositoSelVal=document.getElementById('setup-proposito').value;
+    const proposito=propositoSelVal==='Otro'?document.getElementById('setup-proposito-otro').value.trim():propositoSelVal;
+    const errEl=document.getElementById('setup-error-1');
+    if(!apellido){errEl.textContent='Por favor ingresa tu apellido.';return;}
+    if(!proposito){errEl.textContent='Selecciona tu propósito en la app.';return;}
+    errEl.textContent='';
+  }
   document.getElementById('step-'+currentStep).classList.remove('active');
   currentStep=n;
   document.getElementById('step-'+n).classList.add('active');
-  for(let i=0;i<3;i++){
+  for(let i=0;i<4;i++){
     const dot=document.getElementById('sdot-'+i);
     dot.classList.toggle('done',i<n);
     dot.classList.toggle('active',i===n);
@@ -1185,7 +1258,7 @@ function goStep(n){
 
 function skipInBody(){
   document.getElementById('step2-sub').textContent='Ingresa tus metas de macros manualmente';
-  goStep(2);
+  goStep(3);
 }
 
 function handleFileSelect(event){
@@ -1290,14 +1363,23 @@ function setupPin(k){
 }
 
 async function finishSetup(){
-  const name=document.getElementById('setup-name').value.trim();
+  const firstName=document.getElementById('setup-name').value.trim();
+  const apellido=document.getElementById('setup-apellido').value.trim();
+  const correo=document.getElementById('setup-correo').value.trim();
+  const nacimiento=document.getElementById('setup-nacimiento').value||null;
+  const propositoSelVal=document.getElementById('setup-proposito').value;
+  const proposito=propositoSelVal==='Otro'?document.getElementById('setup-proposito-otro').value.trim():propositoSelVal;
   const cal=parseFloat(document.getElementById('setup-cal').value)||1500;
   const prot=parseFloat(document.getElementById('setup-prot').value)||120;
   const carb=parseFloat(document.getElementById('setup-carb').value)||150;
   const fat=parseFloat(document.getElementById('setup-fat').value)||50;
   const errEl=document.getElementById('setup-error-2');
-  if(!name){errEl.textContent='Nombre requerido. Vuelve al paso 1.';return;}
+  if(!firstName){errEl.textContent='Nombre requerido. Vuelve al paso 1.';return;}
   if(setupPinBuf.length!==4){errEl.textContent='PIN requerido. Vuelve al paso 1.';return;}
+  if(!apellido||!proposito){errEl.textContent='Faltan datos del paso "Sobre ti". Vuelve al paso 2.';return;}
+  // El nombre para mostrar (avatar, panel de la coach, etc.) combina nombre
+  // + apellido, igual que cuando se edita después desde Ajustes.
+  const name=`${firstName} ${apellido}`;
   const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   // El primer perfil que se crea en toda la app (antes de que exista una
   // coach admin) entra directo — no hay nadie todavía para aprobarlo.
@@ -1305,7 +1387,7 @@ async function finishSetup(){
   const isBootstrap=(ALL_PROFILES||[]).length===0;
   showOverlay('Creando perfil...');
   try{
-    const result=await SB.post('profiles',{name,initials,color:setupColor,pin_hash:setupPinBuf,targets:{cal,prot,carb,fat},is_admin:false,approved:isBootstrap});
+    const result=await SB.post('profiles',{name,initials,color:setupColor,pin_hash:setupPinBuf,targets:{cal,prot,carb,fat},is_admin:false,approved:isBootstrap,first_name:firstName,last_name:apellido,email:correo||null,birth_date:nacimiento,app_purpose:proposito});
     const newProfile=Array.isArray(result)?result[0]:result;
     if(!newProfile?.id){hideOverlay();errEl.textContent='Error al crear perfil.';return;}
     ALL_PROFILES=await SB.get('profiles','select=*&order=created_at.asc');
@@ -1400,7 +1482,7 @@ function lockApp(){
   // completa de perfiles), para que un cliente nunca vea los nombres de
   // las demás personas con acceso a la app en su propio dispositivo.
   const autoId=getAutoProfileId();
-  if(autoId){selectProfile(autoId);return;}
+  if(autoId){selectProfile(autoId,'auto');return;}
   showSelectScreen();
 }
 
