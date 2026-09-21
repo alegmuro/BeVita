@@ -656,6 +656,7 @@ canvas{display:block;width:100%;max-width:100%}
 
   <!-- HOY -->
   <div id="tab-hoy">
+    <div id="coach-note-banner"></div>
     <div id="dash-container"><div class="empty-state">Cargando...</div></div>
   </div>
 
@@ -882,6 +883,11 @@ canvas{display:block;width:100%;max-width:100%}
   <!-- AJUSTES -->
   <div id="tab-ajustes" style="display:none">
     <div class="backup-section">
+      <div class="backup-title">Tu link personal</div>
+      <div style="font-size:12px;color:#8B8896;margin-bottom:10px">Guárdalo — al abrirlo entras directo a tu pantalla de PIN, sin pasar por la lista de perfiles.</div>
+      <button class="btn-sm primary" onclick="copyMyLink()">📋 Copiar mi link</button>
+    </div>
+    <div class="backup-section">
       <div class="backup-title">Mi perfil</div>
       <div class="medidas-form" id="perfil-inputs" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Nombre</label><input type="text" id="perfil-nombre" placeholder="Tu nombre"></div>
@@ -945,10 +951,11 @@ canvas{display:block;width:100%;max-width:100%}
   </div>
   <!-- ADMIN -->
   <div id="tab-admin" style="display:none">
-    <div class="dash-section">
+    <div class="dash-section" id="admin-list-view">
       <div class="dash-section-title">Resumen de clientes <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:#FFE7E2;color:#8A3324;font-weight:600;margin-left:6px">Admin</span></div>
       <div id="admin-container"><div class="empty-state">Cargando clientes...</div></div>
     </div>
+    <div id="admin-detail-view" style="display:none"></div>
   </div>
 
 </div>
@@ -1085,6 +1092,17 @@ async function init(){
     ALL_PROFILES=await r.json();
     hideOverlay();
     if(!ALL_PROFILES||ALL_PROFILES.length===0){showNewProfileSetup();return;}
+    // Escape hatch solo para la coach: abrir el link con ?lista=1 fuerza la
+    // lista completa de perfiles aunque este dispositivo tenga un perfil
+    // recordado o se haya entrado por un link personal — para cuando el
+    // único link a mano es el de un perfil de prueba y no el de admin.
+    // Nunca se comparte con clientas; solo lo usa quien conoce este truco.
+    const params=new URLSearchParams(location.search);
+    if(params.get('lista')==='1'){
+      history.replaceState(null,'',location.pathname);
+      showSelectScreen();
+      return;
+    }
     const autoId=getAutoProfileId();
     if(autoId){selectProfile(autoId,'auto');return;}
     showSelectScreen();
@@ -1511,7 +1529,7 @@ function enterApp(profile){
   // selector de fecha no servía para nada. Ahora sí recarga.
   di.onchange=()=>loadDay(di.value);
   loadFoodCatalog();
-  buildMeals();loadDay(today());renderInBodyDatos();renderDashboard();
+  buildMeals();loadDay(today());renderInBodyDatos();renderDashboard();renderCoachNoteBanner();
   initMoodButtons();
 }
 
@@ -1695,7 +1713,7 @@ function showTab(t){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.getElementById('gear-btn')?.classList.toggle('active',t==='ajustes');
   updateHeaderTitle(t);
-  if(t==='hoy') renderDashboard();
+  if(t==='hoy'){renderDashboard();renderCoachNoteBanner();}
   if(t==='nutricion') nutriSetView(nutriSubView);
   if(t==='cuerpo'){renderProgreso();renderInBodyDatos();}
   if(t==='tendencias') renderTendencias();
@@ -1752,6 +1770,12 @@ function refreshAdminBadge(){
 
 async function renderAdminDashboard(){
   if(!PROFILE?.is_admin)return;
+  // Entrar a la pestaña "Clientes" siempre muestra primero la lista, nunca
+  // deja a la coach viendo el detalle de la última clienta que abrió.
+  const listView=document.getElementById('admin-list-view');
+  const detailView=document.getElementById('admin-detail-view');
+  if(listView)listView.style.display='';
+  if(detailView)detailView.style.display='none';
   const container=document.getElementById('admin-container');
   container.innerHTML='<div class="empty-state">Cargando...</div>';
   // Vuelve a pedir la lista de perfiles a Supabase cada vez que se abre esta
@@ -1825,6 +1849,7 @@ async function renderAdminDashboard(){
           <div style="font-size:11px;color:#ADAAB8">Última actividad: ${records[0]?formatDate(records[0].date):'Sin registros'}</div>
         </div>
         <button class="btn-sm" style="font-size:10px;padding:6px 8px" title="Copia un link personal para esta clienta — así nunca ve los nombres de las demás" onclick="adminCopyClientLink('${client.id}')">🔗 Copiar link</button>
+        <button class="btn-sm primary" style="font-size:10px;padding:6px 8px" onclick="adminOpenClientDetail('${client.id}')">Ver detalle →</button>
         ${bw?`<span style="font-size:22px">${moodEmoji[bw.mood]||''}</span>`:''}
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
@@ -1851,10 +1876,238 @@ async function renderAdminDashboard(){
   }
 }
 
+// ── ADMIN: DETALLE DE CLIENTE ────────────────────────────────
+// Todo esto se agrega ARRIBA de renderAdminDashboard() — la lista de
+// clientes con aprobación/link/vencimiento de arriba no se toca. "Ver
+// detalle →" abre este panel; "← Volver a clientes" regresa a la lista.
+let adminDetail={clientId:null,subTab:'resumen',trendField:'peso'};
+
+function adminOpenClientDetail(clientId){
+  adminDetail={clientId,subTab:'resumen',trendField:'peso'};
+  document.getElementById('admin-list-view').style.display='none';
+  document.getElementById('admin-detail-view').style.display='';
+  adminRenderDetailShell();
+}
+
+function adminBackToList(){
+  renderAdminDashboard();
+}
+
+function adminDetailSetTab(t){
+  adminDetail.subTab=t;
+  adminRenderDetailShell();
+}
+
+async function adminRenderDetailShell(){
+  const client=ALL_PROFILES.find(p=>p.id===adminDetail.clientId);
+  const root=document.getElementById('admin-detail-view');
+  if(!client){root.innerHTML='<div class="empty-state">Esta clienta ya no existe.</div>';return;}
+  const tabs=[['resumen','Resumen'],['tendencias','Tendencias'],['nutricion','Nutrición'],['ejercicio','Ejercicio'],['mensajes','Mensajes']];
+  root.innerHTML=`
+    <a href="#" onclick="adminBackToList();return false" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#8B8896;margin-bottom:14px;text-decoration:none">← Volver a clientes</a>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="width:48px;height:48px;border-radius:50%;background:${client.color||'#5B4FE9'};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0">${client.initials||'?'}</div>
+      <div>
+        <div style="font-size:17px;font-weight:600">${client.name}</div>
+        <div style="font-size:12px;color:#8B8896">${client.app_purpose||'Sin propósito definido'}${client.email?' · '+client.email:''}</div>
+      </div>
+    </div>
+    <div class="chart-tabs" style="margin-bottom:14px;flex-wrap:wrap">
+      ${tabs.map(([key,label])=>`<button class="chart-tab${adminDetail.subTab===key?' active':''}" onclick="adminDetailSetTab('${key}')">${label}</button>`).join('')}
+    </div>
+    <div id="admin-detail-body"><div class="empty-state">Cargando...</div></div>
+  `;
+  const body=document.getElementById('admin-detail-body');
+  if(adminDetail.subTab==='resumen')await adminRenderResumen(client,body);
+  else if(adminDetail.subTab==='tendencias')await adminRenderTendencias(client,body);
+  else if(adminDetail.subTab==='nutricion')await adminRenderNutricionDetail(client,body);
+  else if(adminDetail.subTab==='ejercicio')adminRenderEjercicioLink(client,body);
+  else if(adminDetail.subTab==='mensajes')await adminRenderMensajes(client,body);
+}
+
+async function adminRenderResumen(client,body){
+  const todayStr=today();const dates7=getLast7();const from=dates7[0];
+  const [records7,ibRows,lastNoteRows]=await Promise.all([
+    SB.get('diary',`profile_id=eq.${client.id}&date=gte.${from}&order=date.asc`),
+    SB.get('inbody',`profile_id=eq.${client.id}&order=date.desc&limit=1`),
+    SB.get('client_notes',`profile_id=eq.${client.id}&order=created_at.desc&limit=1`)
+  ]);
+  const recs=records7||[];
+  const tgt=client.targets||{cal:1500,prot:120,carb:150,fat:50};
+  const registered=recs.length;
+  const met=recs.filter(r=>{const t=r.totals||{};return['cal','prot','carb','fat'].every(k=>(t[k]||0)>=tgt[k]*0.85&&(t[k]||0)<=tgt[k]*1.10);}).length;
+  const avgCal=registered?Math.round(recs.reduce((s,r)=>s+(r.totals?.cal||0),0)/registered):0;
+  const balance=Math.round(recs.reduce((s,r)=>s+((r.totals?.cal||0)-tgt.cal),0));
+  const ib=ibRows&&ibRows[0];
+  const lastNote=lastNoteRows&&lastNoteRows[0];
+  body.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div class="today-card"><div class="today-card-title">Calorías prom./día (7d)</div><div class="today-card-val">${avgCal} <span style="font-size:11px;color:#ADAAB8;font-weight:600">/ meta ${tgt.cal}</span></div></div>
+      <div class="today-card"><div class="today-card-title">Balance acumulado (7d)</div><div class="today-card-val" style="color:${balance<=0?'#17C39B':'#DC3B3B'}">${balance>0?'+':''}${balance} kcal</div></div>
+      <div class="today-card"><div class="today-card-title">Días registrados</div><div class="today-card-val">${registered}<span style="font-size:11px;color:#ADAAB8">/7</span></div></div>
+      <div class="today-card"><div class="today-card-title">Días en meta</div><div class="today-card-val" style="color:#17C39B">${met}<span style="font-size:11px;color:#ADAAB8">/7</span></div></div>
+    </div>
+    ${ib?`<div class="dash-section" style="margin-bottom:14px">
+      <div class="dash-section-title">Último InBody · ${ib.fecha_label||formatDate(ib.date)}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:#F4F3F7;border-radius:8px;padding:8px;text-align:center"><div style="font-size:15px;font-weight:600">${ib.peso||'—'} kg</div><div style="font-size:10px;color:#ADAAB8">Peso</div></div>
+        <div style="background:#F4F3F7;border-radius:8px;padding:8px;text-align:center"><div style="font-size:15px;font-weight:600">${ib.pgc||'—'}%</div><div style="font-size:10px;color:#ADAAB8">% Grasa</div></div>
+        <div style="background:#F4F3F7;border-radius:8px;padding:8px;text-align:center"><div style="font-size:15px;font-weight:600">${ib.mme||'—'} kg</div><div style="font-size:10px;color:#ADAAB8">MME</div></div>
+      </div>
+    </div>`:'<div class="empty-state" style="margin-bottom:14px">Sin datos InBody aún</div>'}
+    <div class="dash-section" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:#8B8896;text-transform:uppercase">Tu última nota${lastNote?' · '+formatDate(lastNote.created_at.slice(0,10)):''}</div>
+        <div style="font-size:13px;margin-top:4px">${lastNote?lastNote.note:'Aún no le has dejado ninguna nota.'}</div>
+      </div>
+      <button class="btn-sm primary" onclick="adminDetailSetTab('mensajes')">Dejar nota nueva</button>
+    </div>
+  `;
+}
+
+async function adminRenderTendencias(client,body){
+  body.innerHTML=`
+    <div class="chart-tabs" id="admin-trend-tabs" style="margin-bottom:10px;flex-wrap:wrap"></div>
+    <div class="chart-wrap"><canvas id="admin-trend-canvas" height="220"></canvas></div>
+  `;
+  document.getElementById('admin-trend-tabs').innerHTML=TREND_FIELDS.map(f=>`<button class="chart-tab${f.key===adminDetail.trendField?' active':''}" onclick="adminSetTrendField('${f.key}')">${f.label.split(' ')[0]}</button>`).join('');
+  await adminDrawTrend(client);
+}
+function adminSetTrendField(key){adminDetail.trendField=key;adminRenderDetailShell();}
+async function adminDrawTrend(client){
+  const canvas=document.getElementById('admin-trend-canvas');if(!canvas)return;
+  const field=TREND_FIELDS.find(f=>f.key===adminDetail.trendField)||TREND_FIELDS[0];
+  const history=await SB.get(field.source,`profile_id=eq.${client.id}&order=date.asc`)||[];
+  const labels=history.map(h=>{const d=h.date||'';const p=d.split('-');return p.length===3?`${p[2]}/${p[1]}`:d.slice(0,6);});
+  const data=history.map(h=>h[field.key]);
+  const goal=field.key==='peso'
+    ?(client.weight_goal!=null&&client.weight_goal!==''?parseFloat(client.weight_goal):null)
+    :((client.indicator_goals||{})[field.key]!=null?parseFloat(client.indicator_goals[field.key]):null);
+  drawLineChart(canvas,labels,[{data,color:field.color}],goal);
+}
+
+// Solo lectura — a diferencia del historial de la propia clienta, acá la
+// coach no puede borrar días. Reusa las mismas clases visuales (.hist-*).
+async function adminRenderNutricionDetail(client,body){
+  const rows=await SB.get('diary',`profile_id=eq.${client.id}&order=date.desc&limit=14`);
+  if(!rows||!rows.length){body.innerHTML='<div class="empty-state">Sin registros aún.</div>';return;}
+  body.innerHTML=rows.map((rec,i)=>{
+    const bodyId='admin-hb-'+i;
+    return`<div class="hist-card">
+      <div class="hist-header" onclick="toggleHist('${bodyId}')">
+        <span class="hist-date">${formatDate(rec.date)}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="hist-pills">
+            <span class="pill p-cal">${Math.round(rec.totals.cal)} kcal</span>
+            <span class="pill p-prot">${Math.round(rec.totals.prot)}g P</span>
+            <span class="pill p-carb">${Math.round(rec.totals.carb)}g C</span>
+            <span class="pill p-fat">${Math.round(rec.totals.fat)}g G</span>
+          </div>
+          <span class="chevron" id="chev-${bodyId}">&#8964;</span>
+        </div>
+      </div>
+      <div class="hist-body" id="${bodyId}">
+        ${MEALS.map(meal=>{
+          const foods=rec.meals?.[meal.key]||[];
+          if(!foods.length)return'';
+          return`<div class="hist-meal-label">${meal.label}</div>`+
+            foods.map(f=>`<div class="hist-food-row">
+              <span class="hist-food-name">${f.name}${f.g?` <span style="color:#ADAAB8;font-size:10px">${f.g}g</span>`:''}</span>
+              <span class="hist-food-macros"><span>${Math.round(f.cal)} kcal</span><span>${(+f.prot).toFixed(1)}g P</span><span>${(+f.carb).toFixed(1)}g C</span><span>${(+f.fat).toFixed(1)}g G</span></span>
+            </div>`).join('');
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// No duplica el asignador de rutinas — el que ya existe en la pestaña
+// Ejercicio (con balance semanal de volumen e historial) ya soporta elegir
+// clienta. Este botón solo salta ahí con esta clienta ya seleccionada.
+function adminRenderEjercicioLink(client,body){
+  body.innerHTML=`<div class="dash-section" style="text-align:center;padding:28px 20px">
+    <div style="font-size:13px;color:#4B4855;margin-bottom:14px;max-width:420px;margin-left:auto;margin-right:auto">Asigna rutinas, revisa el balance semanal y el historial de entrenos de ${client.name} desde la pestaña Ejercicio.</div>
+    <button class="btn-sm primary" onclick="adminGoToEjercicio('${client.id}')">Ir a Ejercicio →</button>
+  </div>`;
+}
+function adminGoToEjercicio(clientId){
+  showTab('ejercicio');
+  exSelectClient(clientId);
+}
+
+async function adminRenderMensajes(client,body){
+  const notes=await SB.get('client_notes',`profile_id=eq.${client.id}&order=created_at.desc&limit=30`);
+  const firstName=(client.name||'').split(' ')[0]||'la clienta';
+  const list=(notes||[]).map(n=>`
+    <div style="padding:12px 14px;border-bottom:1px solid #F1EFF7">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:#8B8896">${formatDate(n.created_at.slice(0,10))}</span>
+        <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:${n.visible_to_client?'#E6FAF3':'#F1EFF7'};color:${n.visible_to_client?'#0E9E7D':'#8B8896'}">${n.visible_to_client?'Visible para '+firstName:'Nota privada'}</span>
+      </div>
+      <div style="font-size:13px;line-height:1.5">${n.note}</div>
+    </div>`).join('')||'<div class="empty-state">Aún no hay mensajes.</div>';
+  body.innerHTML=`
+    <div class="dash-section" style="padding:0;overflow:hidden;margin-bottom:14px">${list}</div>
+    <div class="dash-section">
+      <label style="font-size:11px;font-weight:700;color:#8B8896;display:block;margin-bottom:6px">Nuevo mensaje o sugerencia para ${firstName}</label>
+      <textarea id="admin-note-input" rows="3" placeholder="Escribe aquí..." style="margin-bottom:10px"></textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer"><input type="checkbox" id="admin-note-visible" checked style="width:16px;height:16px">Visible para ${firstName}</label>
+        <button class="btn-sm primary" onclick="adminSendNote('${client.id}')">Enviar</button>
+      </div>
+    </div>
+  `;
+}
+
+async function adminSendNote(clientId){
+  const input=document.getElementById('admin-note-input');
+  const note=input.value.trim();
+  if(!note)return;
+  const visible=document.getElementById('admin-note-visible').checked;
+  const result=await SB.post('client_notes',{profile_id:clientId,note,visible_to_client:visible});
+  if(!result){alert('No se pudo guardar el mensaje. Verifica tu conexión e intenta de nuevo.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:''));return;}
+  input.value='';
+  adminRenderDetailShell();
+}
+
+// ── MENSAJES DE LA COACH (vista de la clienta) ──────────────────
+// Un banner discreto arriba de "Hoy" con la última nota que la coach dejó
+// marcada como visible — no agrega una pestaña nueva a la navegación de
+// la clienta, solo asoma lo más reciente donde ya entra todos los días.
+async function renderCoachNoteBanner(){
+  const el=document.getElementById('coach-note-banner');
+  if(!el)return;
+  if(!PROFILE||PROFILE.is_admin){el.innerHTML='';return;}
+  const notes=await SB.get('client_notes',`profile_id=eq.${PROFILE.id}&visible_to_client=eq.true&order=created_at.desc&limit=1`);
+  const n=notes&&notes[0];
+  if(!n){el.innerHTML='';return;}
+  el.innerHTML=`<div class="dash-section" style="background:#F8F7FD;border:1px solid #E7E5EF;display:flex;align-items:flex-start;gap:10px;margin-bottom:14px">
+    <span style="font-size:18px">💬</span>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#8B8896;text-transform:uppercase">Mensaje de tu coach · ${formatDate(n.created_at.slice(0,10))}</div>
+      <div style="font-size:13px;margin-top:2px">${n.note}</div>
+    </div>
+  </div>`;
+}
+
 // Genera y copia el link personal de una clienta (?p=<id>): quien lo abre
 // entra directo a SU pantalla de PIN, sin ver la lista de todos los
 // perfiles. Es lo que hay que compartirle a cada clienta en vez del link
 // general de la app.
+// Cualquier perfil (admin o cliente) puede copiar SU PROPIO link personal
+// desde Ajustes — soluciona el caso de la coach, que no aparece en su
+// propia lista de "clientes" y por eso nunca tenía forma de generarse uno.
+async function copyMyLink(){
+  if(!PROFILE?.id)return;
+  const link=`${location.origin}${location.pathname}?p=${PROFILE.id}`;
+  try{
+    await navigator.clipboard.writeText(link);
+    alert('Tu link personal fue copiado. Guárdalo (por ejemplo como marcador) — al abrirlo entras directo a tu pantalla de PIN.');
+  }catch(e){
+    prompt('Copia este link, es tuyo:',link);
+  }
+}
+
 async function adminCopyClientLink(clientId){
   const link=`${location.origin}${location.pathname}?p=${clientId}`;
   try{
