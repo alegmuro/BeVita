@@ -887,6 +887,7 @@ canvas{display:block;width:100%;max-width:100%}
       <div style="font-size:12px;color:#8B8896;margin-bottom:10px">Guárdalo — al abrirlo entras directo a tu pantalla de PIN, sin pasar por la lista de perfiles.</div>
       <button class="btn-sm primary" onclick="copyMyLink()">📋 Copiar mi link</button>
     </div>
+    <div class="backup-section" id="my-plan-section" style="display:none"></div>
     <div class="backup-section">
       <div class="backup-title">Mi perfil</div>
       <div class="medidas-form" id="perfil-inputs" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -1720,7 +1721,7 @@ function showTab(t){
   if(t==='bienestar') renderBienestar();
   if(t==='ejercicio') renderEjercicio();
   if(t==='admin') renderAdminDashboard();
-  if(t==='ajustes') renderAjustes();
+  if(t==='ajustes'){renderAjustes();renderMyPlanCard();}
 }
 
 // El header de arriba (BeVita + subtítulo) cambia de contenido según la
@@ -1880,10 +1881,10 @@ async function renderAdminDashboard(){
 // Todo esto se agrega ARRIBA de renderAdminDashboard() — la lista de
 // clientes con aprobación/link/vencimiento de arriba no se toca. "Ver
 // detalle →" abre este panel; "← Volver a clientes" regresa a la lista.
-let adminDetail={clientId:null,subTab:'resumen',trendField:'peso'};
+let adminDetail={clientId:null,subTab:'resumen',trendField:'peso',hitosDraft:[]};
 
 function adminOpenClientDetail(clientId){
-  adminDetail={clientId,subTab:'resumen',trendField:'peso'};
+  adminDetail={clientId,subTab:'resumen',trendField:'peso',hitosDraft:[]};
   document.getElementById('admin-list-view').style.display='none';
   document.getElementById('admin-detail-view').style.display='';
   adminRenderDetailShell();
@@ -1902,7 +1903,7 @@ async function adminRenderDetailShell(){
   const client=ALL_PROFILES.find(p=>p.id===adminDetail.clientId);
   const root=document.getElementById('admin-detail-view');
   if(!client){root.innerHTML='<div class="empty-state">Esta clienta ya no existe.</div>';return;}
-  const tabs=[['resumen','Resumen'],['tendencias','Tendencias'],['nutricion','Nutrición'],['ejercicio','Ejercicio'],['mensajes','Mensajes']];
+  const tabs=[['resumen','Resumen'],['plan','Plan'],['tendencias','Tendencias'],['nutricion','Nutrición'],['ejercicio','Ejercicio'],['mensajes','Mensajes']];
   root.innerHTML=`
     <a href="#" onclick="adminBackToList();return false" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#8B8896;margin-bottom:14px;text-decoration:none">← Volver a clientes</a>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
@@ -1919,6 +1920,7 @@ async function adminRenderDetailShell(){
   `;
   const body=document.getElementById('admin-detail-body');
   if(adminDetail.subTab==='resumen')await adminRenderResumen(client,body);
+  else if(adminDetail.subTab==='plan')await adminRenderPlan(client,body);
   else if(adminDetail.subTab==='tendencias')await adminRenderTendencias(client,body);
   else if(adminDetail.subTab==='nutricion')await adminRenderNutricionDetail(client,body);
   else if(adminDetail.subTab==='ejercicio')adminRenderEjercicioLink(client,body);
@@ -1927,11 +1929,13 @@ async function adminRenderDetailShell(){
 
 async function adminRenderResumen(client,body){
   const todayStr=today();const dates7=getLast7();const from=dates7[0];
-  const [records7,ibRows,lastNoteRows]=await Promise.all([
+  const [records7,ibRows,lastNoteRows,protocolRows]=await Promise.all([
     SB.get('diary',`profile_id=eq.${client.id}&date=gte.${from}&order=date.asc`),
     SB.get('inbody',`profile_id=eq.${client.id}&order=date.desc&limit=1`),
-    SB.get('client_notes',`profile_id=eq.${client.id}&order=created_at.desc&limit=1`)
+    SB.get('client_notes',`profile_id=eq.${client.id}&order=created_at.desc&limit=1`),
+    SB.get('client_protocols',`profile_id=eq.${client.id}&limit=1`)
   ]);
+  const wk=planWeekInfo(protocolRows&&protocolRows[0]);
   const recs=records7||[];
   const tgt=client.targets||{cal:1500,prot:120,carb:150,fat:50};
   const registered=recs.length;
@@ -1941,6 +1945,10 @@ async function adminRenderResumen(client,body){
   const ib=ibRows&&ibRows[0];
   const lastNote=lastNoteRows&&lastNoteRows[0];
   body.innerHTML=`
+    ${wk?`<div class="dash-section" style="margin-bottom:14px;background:#EAE8FB;border-color:#D6D1F5;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div style="font-size:13px;font-weight:600;color:#3A2FA0">Semana ${wk.weekNum}${wk.totalWeeks?' de '+wk.totalWeeks:''}${wk.daysLeft!=null?(wk.daysLeft>=0?` · faltan ${wk.daysLeft} días`:' · plan vencido'):''}</div>
+      <button class="btn-sm" onclick="adminDetailSetTab('plan')">Ver plan →</button>
+    </div>`:''}
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
       <div class="today-card"><div class="today-card-title">Calorías prom./día (7d)</div><div class="today-card-val">${avgCal} <span style="font-size:11px;color:#ADAAB8;font-weight:600">/ meta ${tgt.cal}</span></div></div>
       <div class="today-card"><div class="today-card-title">Balance acumulado (7d)</div><div class="today-card-val" style="color:${balance<=0?'#17C39B':'#DC3B3B'}">${balance>0?'+':''}${balance} kcal</div></div>
@@ -1963,6 +1971,137 @@ async function adminRenderResumen(client,body){
       <button class="btn-sm primary" onclick="adminDetailSetTab('mensajes')">Dejar nota nueva</button>
     </div>
   `;
+}
+
+// Cuántas semanas de plan van y cuántas faltan, a partir de fecha_inicio /
+// fecha_fin del protocolo — se usa tanto en el Resumen de la coach como en
+// "Tu plan" del lado de la clienta, para no calcularlo dos veces distinto.
+function planWeekInfo(protocol){
+  if(!protocol?.fecha_inicio)return null;
+  const start=new Date(protocol.fecha_inicio+'T00:00:00');
+  const now=new Date(today()+'T00:00:00');
+  const daysIn=Math.floor((now-start)/86400000);
+  const weekNum=Math.max(1,Math.floor(daysIn/7)+1);
+  let totalWeeks=null,daysLeft=null;
+  if(protocol.fecha_fin){
+    const end=new Date(protocol.fecha_fin+'T00:00:00');
+    totalWeeks=Math.max(1,Math.ceil((end-start)/86400000/7));
+    daysLeft=Math.ceil((end-now)/86400000);
+  }
+  return{weekNum,totalWeeks,daysLeft};
+}
+
+// ── ADMIN: PLAN / PROTOCOLO ──────────────────────────────────
+// Una fila por clienta (se reemplaza al arrancar una fase nueva). Objetivo
+// en texto libre, calorías que pueden variar por tipo de día (algo que
+// "targets" en profiles no soporta, esa es una sola meta diaria fija), y
+// un calendario de hitos editable semana a semana.
+async function adminRenderPlan(client,body){
+  const rows=await SB.get('client_protocols',`profile_id=eq.${client.id}&limit=1`);
+  const p=(rows&&rows[0])||{};
+  adminDetail.hitosDraft=Array.isArray(p.hitos)?p.hitos.map(h=>({...h})):[];
+  const wk=planWeekInfo(p);
+  body.innerHTML=`
+    ${wk?`<div class="dash-section" style="margin-bottom:14px;background:#EAE8FB;border-color:#D6D1F5">
+      <div style="font-size:13px;font-weight:600;color:#3A2FA0">Semana ${wk.weekNum}${wk.totalWeeks?' de '+wk.totalWeeks:''}${wk.daysLeft!=null?(wk.daysLeft>=0?` · faltan ${wk.daysLeft} días`:' · plan vencido'):''}</div>
+    </div>`:''}
+    <div class="dash-section" style="margin-bottom:14px">
+      <div class="dash-section-title">Objetivo y duración</div>
+      <label style="font-size:11px;color:#8B8896;display:block;margin-bottom:4px">Objetivo</label>
+      <textarea id="plan-objetivo" rows="2" placeholder="Ej: Bajar de 30.9% a 26-27% de grasa en 12 semanas, conservando la masa magra" style="margin-bottom:10px">${p.objetivo||''}</textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Fecha de inicio</label><input type="date" id="plan-fecha-inicio" value="${p.fecha_inicio||''}"></div>
+        <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Fecha de cierre / próxima medición</label><input type="date" id="plan-fecha-fin" value="${p.fecha_fin||''}"></div>
+      </div>
+    </div>
+    <div class="dash-section" style="margin-bottom:14px">
+      <div class="dash-section-title">Calorías por tipo de día</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Entreno</label><input type="number" id="plan-kcal-entreno" value="${p.kcal_entreno||''}" placeholder="1650"></div>
+        <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Descanso</label><input type="number" id="plan-kcal-descanso" value="${p.kcal_descanso||''}" placeholder="1450"></div>
+        <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Mantenimiento</label><input type="number" id="plan-kcal-mant" value="${p.kcal_mantenimiento||''}" placeholder="1900"></div>
+      </div>
+    </div>
+    <div class="dash-section" style="margin-bottom:14px">
+      <div class="dash-section-title">Estructura semanal</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+        <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Pasos/día</label><input type="number" id="plan-pasos" value="${p.pasos_meta||''}" placeholder="8000"></div>
+        <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Días fuerza</label><input type="number" id="plan-fuerza-dias" value="${p.fuerza_dias||''}" placeholder="3"></div>
+        <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Días cardio</label><input type="number" id="plan-cardio-dias" value="${p.cardio_dias||''}" placeholder="2"></div>
+      </div>
+      <label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Reglas y notas (ej: nunca dos días de pierna seguidos)</label>
+      <textarea id="plan-notas" rows="2">${p.notas_estructura||''}</textarea>
+    </div>
+    <div class="dash-section" style="margin-bottom:14px">
+      <div class="dash-section-title">Calendario de hitos</div>
+      <div id="plan-hitos-list"></div>
+      <button class="btn-sm" style="margin-top:6px" onclick="adminPlanAddHito()">+ Agregar semana</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-sm primary" onclick="adminSavePlan('${client.id}')">Guardar plan</button>
+      <span class="save-msg" id="plan-save-msg">✓ Guardado</span>
+    </div>
+  `;
+  adminRenderPlanHitos();
+}
+
+function adminRenderPlanHitos(){
+  const el=document.getElementById('plan-hitos-list');
+  if(!el)return;
+  el.innerHTML=adminDetail.hitosDraft.length?adminDetail.hitosDraft.map((h,i)=>`
+    <div class="plan-hito-row" style="display:grid;grid-template-columns:50px 118px 1fr 30px 28px;gap:6px;align-items:center;margin-bottom:6px">
+      <input class="h-semana" type="number" min="1" value="${h.semana!=null?h.semana:''}" placeholder="Sem" style="text-align:center">
+      <input class="h-fecha" type="date" value="${h.fecha||''}">
+      <input class="h-hito" type="text" value="${(h.hito||'').replace(/"/g,'&quot;')}" placeholder="Hito de esta semana">
+      <input class="h-hecho" type="checkbox" ${h.hecho?'checked':''} style="width:18px;height:18px;justify-self:center" title="Hecho">
+      <button class="btn-sm danger" style="padding:4px 6px;font-size:11px" onclick="adminPlanRemoveHito(${i})" title="Eliminar">✕</button>
+    </div>`).join(''):'<div class="empty-state" style="padding:10px">Sin hitos aún. Agrega el primero.</div>';
+}
+
+// Antes de agregar/quitar una fila hay que leer del DOM lo que la coach ya
+// haya escrito en las demás filas — si no, un "+ Agregar semana" a mitad de
+// llenar el calendario borraría lo que llevaba.
+function adminPlanSyncHitosFromDOM(){
+  const rows=[...document.querySelectorAll('.plan-hito-row')];
+  if(!rows.length)return;
+  adminDetail.hitosDraft=rows.map(row=>({
+    semana:row.querySelector('.h-semana').value?parseInt(row.querySelector('.h-semana').value):null,
+    fecha:row.querySelector('.h-fecha').value||null,
+    hito:row.querySelector('.h-hito').value.trim(),
+    hecho:row.querySelector('.h-hecho').checked
+  }));
+}
+function adminPlanAddHito(){
+  adminPlanSyncHitosFromDOM();
+  adminDetail.hitosDraft.push({semana:adminDetail.hitosDraft.length+1,fecha:'',hito:'',hecho:false});
+  adminRenderPlanHitos();
+}
+function adminPlanRemoveHito(i){
+  adminPlanSyncHitosFromDOM();
+  adminDetail.hitosDraft.splice(i,1);
+  adminRenderPlanHitos();
+}
+
+async function adminSavePlan(clientId){
+  adminPlanSyncHitosFromDOM();
+  const patch={
+    profile_id:clientId,
+    objetivo:document.getElementById('plan-objetivo').value.trim()||null,
+    fecha_inicio:document.getElementById('plan-fecha-inicio').value||null,
+    fecha_fin:document.getElementById('plan-fecha-fin').value||null,
+    kcal_entreno:parseFloat(document.getElementById('plan-kcal-entreno').value)||null,
+    kcal_descanso:parseFloat(document.getElementById('plan-kcal-descanso').value)||null,
+    kcal_mantenimiento:parseFloat(document.getElementById('plan-kcal-mant').value)||null,
+    pasos_meta:parseInt(document.getElementById('plan-pasos').value)||null,
+    fuerza_dias:parseInt(document.getElementById('plan-fuerza-dias').value)||null,
+    cardio_dias:parseInt(document.getElementById('plan-cardio-dias').value)||null,
+    notas_estructura:document.getElementById('plan-notas').value.trim()||null,
+    hitos:adminDetail.hitosDraft.filter(h=>h.hito||h.fecha)
+  };
+  const result=await SB.upsert('client_protocols',patch,'profile_id');
+  if(!result){alert('No se pudo guardar el plan. Verifica tu conexión e intenta de nuevo.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:''));return;}
+  const msg=document.getElementById('plan-save-msg');
+  if(msg){msg.classList.add('show');setTimeout(()=>msg.classList.remove('show'),2000);}
 }
 
 async function adminRenderTendencias(client,body){
@@ -2088,6 +2227,43 @@ async function renderCoachNoteBanner(){
       <div style="font-size:13px;margin-top:2px">${n.note}</div>
     </div>
   </div>`;
+}
+
+// "Tu plan" en Ajustes — solo lectura para la clienta: lo que la coach
+// armó en Clientes → [clienta] → Plan. Se oculta por completo si la coach
+// todavía no le ha armado un plan, en vez de mostrar campos vacíos.
+async function renderMyPlanCard(){
+  const el=document.getElementById('my-plan-section');
+  if(!el)return;
+  if(!PROFILE||PROFILE.is_admin){el.style.display='none';return;}
+  const rows=await SB.get('client_protocols',`profile_id=eq.${PROFILE.id}&limit=1`);
+  const p=rows&&rows[0];
+  if(!p||(!p.objetivo&&!p.fecha_inicio&&!(p.hitos||[]).length)){el.style.display='none';return;}
+  el.style.display='';
+  const wk=planWeekInfo(p);
+  const hitos=(p.hitos||[]).filter(h=>h.hito||h.fecha);
+  el.innerHTML=`
+    <div class="backup-title">Tu plan con tu coach</div>
+    ${wk?`<div style="font-size:12px;font-weight:600;color:#5B4FE9;margin-bottom:8px">Semana ${wk.weekNum}${wk.totalWeeks?' de '+wk.totalWeeks:''}${wk.daysLeft!=null&&wk.daysLeft>=0?` · faltan ${wk.daysLeft} días`:''}</div>`:''}
+    ${p.objetivo?`<div style="font-size:13px;margin-bottom:10px">${p.objetivo}</div>`:''}
+    ${(p.kcal_entreno||p.kcal_descanso||p.kcal_mantenimiento)?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      ${p.kcal_entreno?`<span style="font-size:11px;font-weight:600;background:#F4F3F7;padding:5px 10px;border-radius:20px">Día entreno: ${p.kcal_entreno} kcal</span>`:''}
+      ${p.kcal_descanso?`<span style="font-size:11px;font-weight:600;background:#F4F3F7;padding:5px 10px;border-radius:20px">Día descanso: ${p.kcal_descanso} kcal</span>`:''}
+      ${p.kcal_mantenimiento?`<span style="font-size:11px;font-weight:600;background:#F4F3F7;padding:5px 10px;border-radius:20px">Mantenimiento: ${p.kcal_mantenimiento} kcal</span>`:''}
+    </div>`:''}
+    ${(p.pasos_meta||p.fuerza_dias||p.cardio_dias)?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      ${p.pasos_meta?`<span style="font-size:11px;font-weight:600;background:#F4F3F7;padding:5px 10px;border-radius:20px">🚶 ${p.pasos_meta} pasos/día</span>`:''}
+      ${p.fuerza_dias?`<span style="font-size:11px;font-weight:600;background:#F4F3F7;padding:5px 10px;border-radius:20px">🏋 ${p.fuerza_dias}x fuerza/sem</span>`:''}
+      ${p.cardio_dias?`<span style="font-size:11px;font-weight:600;background:#F4F3F7;padding:5px 10px;border-radius:20px">🏃 ${p.cardio_dias}x cardio/sem</span>`:''}
+    </div>`:''}
+    ${hitos.length?`<div style="margin-top:6px">
+      ${hitos.map(h=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F1EFF7;font-size:12.5px">
+        <span style="font-size:14px">${h.hecho?'✅':'⬜'}</span>
+        <span style="color:#ADAAB8;min-width:38px">${h.semana?'Sem '+h.semana:''}</span>
+        <span style="flex:1;${h.hecho?'color:#ADAAB8;text-decoration:line-through':''}">${h.hito||''}</span>
+      </div>`).join('')}
+    </div>`:''}
+  `;
 }
 
 // Genera y copia el link personal de una clienta (?p=<id>): quien lo abre
