@@ -2662,7 +2662,7 @@ async function _persistInBody(data){
     fecha_label:formatDate(dateVal)
   },'profile_id,date');
   if(!result){
-    alert('No se pudo guardar el InBody. Si es la primera vez que usas TRM o Comentarios, asegúrate de haber corrido la migración de Supabase (supabase-cuerpo-migration.sql). Si no, verifica tu conexión e intenta de nuevo.');
+    alert('No se pudo guardar el InBody.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:' Si es la primera vez que usas TRM o Comentarios, asegúrate de haber corrido la migración de Supabase (supabase-cuerpo-migration.sql). Si no, verifica tu conexión e intenta de nuevo.'));
     return;
   }
   editingInBodyDate=null;
@@ -2907,7 +2907,7 @@ async function saveMedidas(){
   }
   const result=await SB.upsert('medidas',entry,'profile_id,date');
   if(!result){
-    alert('No se pudieron guardar las medidas. Asegúrate de haber corrido la migración de Supabase (supabase-cuerpo-migration.sql) que crea la tabla "medidas" — si ya la corriste, verifica tu conexión e intenta de nuevo.');
+    alert('No se pudieron guardar las medidas.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:' Asegúrate de haber corrido la migración de Supabase (supabase-cuerpo-migration.sql) que crea la tabla "medidas" — si ya la corriste, verifica tu conexión e intenta de nuevo.'));
     return;
   }
   editingMedidaDate=null;
