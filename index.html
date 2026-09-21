@@ -473,8 +473,9 @@ canvas{display:block;width:100%;max-width:100%}
       <div style="font-size:11px;color:#DC3B3B;margin-top:8px;min-height:16px;text-align:center" id="setup-error-1"></div>
     </div>
 
-    <!-- Step 2: InBody upload -->
+    <!-- Step 2: InBody upload (flujo general) / Motivación (flujo link de registro nuevo) -->
     <div class="setup-step" id="step-2">
+      <div id="step2-general">
       <div class="setup-title">Tu InBody 📊</div>
       <div class="setup-sub">Sube una foto de tu resultado InBody — Claude leerá los datos y calculará tus metas automáticamente</div>
 
@@ -525,10 +526,21 @@ canvas{display:block;width:100%;max-width:100%}
         <button class="btn-sm primary" style="width:100%;padding:10px;font-size:14px" onclick="goStep(3)">Usar estas metas →</button>
       </div>
       <span class="skip-link" onclick="skipInBody()">Saltar por ahora — configurar metas manualmente</span>
+      </div>
+      <div id="step2-nuevo" style="display:none">
+        <div class="setup-title">Motivación y objetivo 🎯</div>
+        <div class="setup-sub">Cuéntanos un poco de ti — no hay respuestas correctas</div>
+        <div class="setup-section"><div class="setup-label">¿Qué te motivó a empezar este proceso ahora?</div><textarea id="setup-q-motivacion" rows="2" placeholder="Escribe con confianza..." style="width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid #E7E5EF;border-radius:8px;resize:vertical"></textarea></div>
+        <div class="setup-section"><div class="setup-label">¿Qué te gustaría lograr en los próximos 3 meses?</div><textarea id="setup-q-objetivo" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid #E7E5EF;border-radius:8px;resize:vertical"></textarea></div>
+        <div class="setup-section"><div class="setup-label">¿Cómo te imaginas en tu mejor versión — físico y energía?</div><textarea id="setup-q-ideal" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid #E7E5EF;border-radius:8px;resize:vertical"></textarea></div>
+        <div class="setup-section"><div class="setup-label">¿Qué es lo que más te ha costado sostener en otros intentos?</div><textarea id="setup-q-reto" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid #E7E5EF;border-radius:8px;resize:vertical"></textarea></div>
+        <button class="btn-sm primary" style="width:100%;padding:10px;font-size:14px;margin-top:8px" onclick="goStep(3)">Continuar →</button>
+      </div>
     </div>
 
-    <!-- Step 3: Manual fallback or confirm -->
+    <!-- Step 3: Metas diarias (flujo general) / Hábitos y apoyo (flujo link de registro nuevo) -->
     <div class="setup-step" id="step-3">
+      <div id="step3-general">
       <div class="setup-title">Metas diarias ✅</div>
       <div class="setup-sub" id="step2-sub">Confirma o ajusta tus metas de macros</div>
       <div class="setup-grid" style="margin-top:12px">
@@ -536,6 +548,16 @@ canvas{display:block;width:100%;max-width:100%}
         <div class="setup-field"><label>Proteína (g)</label><input type="number" id="setup-prot" placeholder="120" min="0"></div>
         <div class="setup-field"><label>Carbohidratos (g)</label><input type="number" id="setup-carb" placeholder="150" min="0"></div>
         <div class="setup-field"><label>Grasa (g)</label><input type="number" id="setup-fat" placeholder="50" min="0"></div>
+      </div>
+      </div>
+      <div id="step3-nuevo" style="display:none">
+        <div class="setup-title">Hábitos y apoyo 🌱</div>
+        <div class="setup-sub">Así tu coach sabe por dónde empezar contigo</div>
+        <div class="setup-section"><div class="setup-label">¿En qué necesitas más apoyo (constancia, alimentación, entrenamiento, motivación)?</div><textarea id="setup-q-apoyo" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid #E7E5EF;border-radius:8px;resize:vertical"></textarea></div>
+        <div class="setup-section"><div class="setup-label">¿Cómo describirías tu alimentación actual?</div><textarea id="setup-q-alimentacion" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid #E7E5EF;border-radius:8px;resize:vertical"></textarea></div>
+        <div class="setup-section"><div class="setup-label">¿Haces actividad física actualmente? ¿Cuál y con qué frecuencia?</div><textarea id="setup-q-actividad" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid #E7E5EF;border-radius:8px;resize:vertical"></textarea></div>
+        <div class="setup-section"><div class="setup-label">¿Cómo es tu descanso / sueño en general?</div><textarea id="setup-q-sueno" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid #E7E5EF;border-radius:8px;resize:vertical"></textarea></div>
+        <div class="setup-section"><div class="setup-label">¿Alguna restricción, preferencia alimentaria o algo que debamos saber?</div><textarea id="setup-q-restricciones" rows="2" style="width:100%;font-family:inherit;font-size:13px;padding:8px 10px;border:0.5px solid #E7E5EF;border-radius:8px;resize:vertical"></textarea></div>
       </div>
       <button class="btn-sm primary" style="width:100%;padding:10px;font-size:14px;margin-top:16px" onclick="finishSetup()">Crear mi perfil →</button>
       <div style="font-size:11px;color:#DC3B3B;margin-top:8px;min-height:16px;text-align:center" id="setup-error-2"></div>
@@ -954,7 +976,10 @@ canvas{display:block;width:100%;max-width:100%}
   <!-- ADMIN -->
   <div id="tab-admin" style="display:none">
     <div class="dash-section" id="admin-list-view">
-      <div class="dash-section-title">Resumen de clientes <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:#FFE7E2;color:#8A3324;font-weight:600;margin-left:6px">Admin</span></div>
+      <div class="dash-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span>Resumen de clientes <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:#FFE7E2;color:#8A3324;font-weight:600;margin-left:6px">Admin</span></span>
+        <button class="btn-sm primary" style="font-size:11px" onclick="adminCopySignupLink()">🔗 Link de registro para nuevas</button>
+      </div>
       <div id="admin-container"><div class="empty-state">Cargando clientes...</div></div>
     </div>
     <div id="admin-detail-view" style="display:none"></div>
@@ -1105,6 +1130,14 @@ async function init(){
       showSelectScreen();
       return;
     }
+    // Link específico para crear perfiles de clientas nuevas (?nuevo=1):
+    // salta directo al formulario de bienvenida, sin pasar por la lista de
+    // perfiles ni por el paso de "Metas diarias" (ver showNewProfileSetup).
+    if(params.get('nuevo')==='1'){
+      history.replaceState(null,'',location.pathname);
+      showNewProfileSetup('nuevo');
+      return;
+    }
     const autoId=getAutoProfileId();
     if(autoId){selectProfile(autoId,'auto');return;}
     showSelectScreen();
@@ -1230,7 +1263,18 @@ function accessDaysLeft(p){
   return Math.ceil((new Date(p.access_expires_at+'T23:59:59')-new Date())/86400000);
 }
 
-function showNewProfileSetup(){
+function showNewProfileSetup(mode){
+  // mode 'nuevo' = se entró por el link específico de registro de clientas
+  // nuevas (?nuevo=1): se saltan el paso de InBody y el de "Metas
+  // diarias", reemplazados por preguntas de motivación/hábitos — la coach
+  // asigna las metas calóricas después, al aprobar (ver adminApproveClient).
+  // Sin mode (o cualquier otro valor) = flujo general de siempre.
+  setupFlowType=mode==='nuevo'?'nuevo':'general';
+  const esNuevo=setupFlowType==='nuevo';
+  document.getElementById('step2-general').style.display=esNuevo?'none':'';
+  document.getElementById('step2-nuevo').style.display=esNuevo?'':'none';
+  document.getElementById('step3-general').style.display=esNuevo?'none':'';
+  document.getElementById('step3-nuevo').style.display=esNuevo?'':'none';
   setupPinBuf='';setupColor='#5B4FE9';
   document.getElementById('setup-screen').style.display='flex';
   hideAllScreens();
@@ -1239,6 +1283,7 @@ function showNewProfileSetup(){
 
 // ── SETUP ─────────────────────────────────────────────────────
 let setupColor='#5B4FE9';
+let setupFlowType='general';
 let ibImageBase64=null;
 let aiInBodyData=null;
 let currentStep=0;
@@ -1395,10 +1440,6 @@ async function finishSetup(){
   const nacimiento=document.getElementById('setup-nacimiento').value||null;
   const propositoSelVal=document.getElementById('setup-proposito').value;
   const proposito=propositoSelVal==='Otro'?document.getElementById('setup-proposito-otro').value.trim():propositoSelVal;
-  const cal=parseFloat(document.getElementById('setup-cal').value)||1500;
-  const prot=parseFloat(document.getElementById('setup-prot').value)||120;
-  const carb=parseFloat(document.getElementById('setup-carb').value)||150;
-  const fat=parseFloat(document.getElementById('setup-fat').value)||50;
   const errEl=document.getElementById('setup-error-2');
   if(!firstName){errEl.textContent='Nombre requerido. Vuelve al paso 1.';return;}
   if(setupPinBuf.length!==4){errEl.textContent='PIN requerido. Vuelve al paso 1.';return;}
@@ -1411,9 +1452,34 @@ async function finishSetup(){
   // coach admin) entra directo — no hay nadie todavía para aprobarlo.
   // Cualquier registro posterior queda pendiente hasta que la coach lo apruebe.
   const isBootstrap=(ALL_PROFILES||[]).length===0;
+  const payload={name,initials,color:setupColor,pin_hash:setupPinBuf,is_admin:false,approved:isBootstrap,first_name:firstName,last_name:apellido,email:correo||null,birth_date:nacimiento,app_purpose:proposito};
+  if(setupFlowType==='nuevo'){
+    // Por el link de registro de clientas nuevas no se pide meta calórica —
+    // queda sin metas hasta que la coach se las asigne al aprobar el
+    // perfil (ver adminApproveClient). En su lugar se guardan las
+    // respuestas de motivación/hábitos para que la coach la conozca mejor.
+    payload.targets=null;
+    payload.intake={
+      motivacion:document.getElementById('setup-q-motivacion')?.value.trim()||null,
+      objetivo_3m:document.getElementById('setup-q-objetivo')?.value.trim()||null,
+      ideal:document.getElementById('setup-q-ideal')?.value.trim()||null,
+      reto:document.getElementById('setup-q-reto')?.value.trim()||null,
+      apoyo:document.getElementById('setup-q-apoyo')?.value.trim()||null,
+      alimentacion:document.getElementById('setup-q-alimentacion')?.value.trim()||null,
+      actividad:document.getElementById('setup-q-actividad')?.value.trim()||null,
+      sueno:document.getElementById('setup-q-sueno')?.value.trim()||null,
+      restricciones:document.getElementById('setup-q-restricciones')?.value.trim()||null
+    };
+  }else{
+    const cal=parseFloat(document.getElementById('setup-cal').value)||1500;
+    const prot=parseFloat(document.getElementById('setup-prot').value)||120;
+    const carb=parseFloat(document.getElementById('setup-carb').value)||150;
+    const fat=parseFloat(document.getElementById('setup-fat').value)||50;
+    payload.targets={cal,prot,carb,fat};
+  }
   showOverlay('Creando perfil...');
   try{
-    const result=await SB.post('profiles',{name,initials,color:setupColor,pin_hash:setupPinBuf,targets:{cal,prot,carb,fat},is_admin:false,approved:isBootstrap,first_name:firstName,last_name:apellido,email:correo||null,birth_date:nacimiento,app_purpose:proposito});
+    const result=await SB.post('profiles',payload);
     const newProfile=Array.isArray(result)?result[0]:result;
     if(!newProfile?.id){hideOverlay();errEl.textContent='Error al crear perfil.';return;}
     ALL_PROFILES=await SB.get('profiles','select=*&order=created_at.asc');
@@ -1843,8 +1909,21 @@ async function renderAdminDashboard(){
     const daysLeft=accessDaysLeft(client);
     let accessHtml;
     if(client.approved===false){
+      // Si llegó por el link de registro de clientas nuevas, no trae
+      // metas todavía (ver finishSetup) — se le asignan aquí mismo, al
+      // aprobarla, para que no quede sin nada configurado. Si ya traía
+      // metas (flujo general/InBody), los campos vienen precargados y con
+      // dejarlos igual no se pierden.
+      const tgt=client.targets||{};
       accessHtml=`<div style="margin-top:10px;padding:10px;background:#FFF8E8;border:1px solid #F0DFA8;border-radius:8px">
         <div style="font-size:12px;font-weight:600;color:#8A6D00;margin-bottom:6px">⏳ Pendiente de aprobación</div>
+        ${!tgt.cal?`<div style="font-size:11px;color:#8A6D00;margin-bottom:8px">Aún no tiene metas diarias — asígnalas antes de aprobar (o déjalas en blanco por ahora y complétalas luego desde aquí mismo).</div>`:''}
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:8px">
+          <div><label style="font-size:10px;color:#8B8896">Calorías (kcal)</label><input type="number" min="0" value="${tgt.cal||''}" placeholder="1500" id="approve-cal-${client.id}" style="width:100%"></div>
+          <div><label style="font-size:10px;color:#8B8896">Proteína (g)</label><input type="number" min="0" value="${tgt.prot||''}" placeholder="120" id="approve-prot-${client.id}" style="width:100%"></div>
+          <div><label style="font-size:10px;color:#8B8896">Carbohidratos (g)</label><input type="number" min="0" value="${tgt.carb||''}" placeholder="150" id="approve-carb-${client.id}" style="width:100%"></div>
+          <div><label style="font-size:10px;color:#8B8896">Grasa (g)</label><input type="number" min="0" value="${tgt.fat||''}" placeholder="50" id="approve-fat-${client.id}" style="width:100%"></div>
+        </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <input type="number" min="1" value="30" id="approve-days-${client.id}" style="width:70px" title="Días de acceso a otorgar">
           <span style="font-size:11px;color:#8B8896">días</span>
@@ -1970,7 +2049,26 @@ async function adminRenderResumen(client,body){
   const lastNote=lastNoteRows&&lastNoteRows[0];
   const protocol=protocolRows&&protocolRows[0];
   const g=await computeGoalWidgets(client.id,client.weight_goal,protocol,tgt.cal);
+  // Respuestas del formulario de bienvenida (solo si entró por el link de
+  // registro de clientas nuevas — ver finishSetup / step2-nuevo/step3-nuevo).
+  const intake=client.intake||{};
+  const intakeFields=[
+    ['motivacion','¿Qué la motivó a empezar?'],
+    ['objetivo_3m','Objetivo a 3 meses'],
+    ['ideal','Su mejor versión'],
+    ['reto','Lo que más le ha costado sostener'],
+    ['apoyo','Dónde necesita más apoyo'],
+    ['alimentacion','Alimentación actual'],
+    ['actividad','Actividad física actual'],
+    ['sueno','Descanso / sueño'],
+    ['restricciones','Restricciones o preferencias']
+  ].filter(([k])=>intake[k]);
+  const intakeHtml=intakeFields.length?`<div class="dash-section" style="margin-bottom:14px">
+    <div class="dash-section-title">📝 Lo que contó al registrarse</div>
+    ${intakeFields.map(([k,label])=>`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:700;color:#8B8896;text-transform:uppercase">${label}</div><div style="font-size:13px;margin-top:2px">${intake[k]}</div></div>`).join('')}
+  </div>`:'';
   body.innerHTML=`
+    ${intakeHtml}
     ${wk?`<div class="dash-section" style="margin-bottom:14px;background:#EAE8FB;border-color:#D6D1F5;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div style="font-size:13px;font-weight:600;color:#3A2FA0">Semana ${wk.weekNum}${wk.totalWeeks?' de '+wk.totalWeeks:''}${wk.daysLeft!=null?(wk.daysLeft>=0?` · faltan ${wk.daysLeft} días`:' · plan vencido'):''}</div>
       <button class="btn-sm" onclick="adminDetailSetTab('plan')">Ver plan →</button>
@@ -2546,6 +2644,20 @@ async function copyMyLink(){
   }
 }
 
+// Link único (no cambia por clienta) para que alguien nuevo cree su
+// perfil directo por el formulario de bienvenida, sin metas y con las
+// preguntas de motivación/hábitos — ver ?nuevo=1 en init() y
+// showNewProfileSetup(). Se comparte una sola vez, con quien sea.
+async function adminCopySignupLink(){
+  const link=`${location.origin}${location.pathname}?nuevo=1`;
+  try{
+    await navigator.clipboard.writeText(link);
+    alert('Link de registro copiado. Compártelo con quien vaya a crear su perfil por primera vez — abre directo el formulario de bienvenida, sin metas diarias (se las asignas tú al aprobarla).');
+  }catch(e){
+    prompt('Copia este link y compártelo con clientas nuevas:',link);
+  }
+}
+
 async function adminCopyClientLink(clientId){
   const link=`${location.origin}${location.pathname}?p=${clientId}`;
   try{
@@ -2561,8 +2673,26 @@ async function adminApproveClient(clientId){
   const days=parseInt(daysInput?.value)||30;
   const expires=new Date();expires.setDate(expires.getDate()+days);
   const expiresStr=localDateStr(expires);
+  // Metas al momento de aprobar: si dejó los campos en blanco pero el
+  // perfil ya traía metas de antes, se respetan esas; si no traía nada
+  // (link de registro nuevo) y los deja en blanco, sigue sin metas — la
+  // coach puede volver a esta misma pantalla cuando quiera para ponerlas.
+  const client=ALL_PROFILES.find(p=>p.id===clientId);
+  const existingTgt=client?.targets||{};
+  const readNum=(id,fallback)=>{
+    const el=document.getElementById(id);
+    if(!el||el.value==='')return fallback;
+    const n=parseFloat(el.value);
+    return isNaN(n)?fallback:n;
+  };
+  const cal=readNum('approve-cal-'+clientId,existingTgt.cal);
+  const prot=readNum('approve-prot-'+clientId,existingTgt.prot);
+  const carb=readNum('approve-carb-'+clientId,existingTgt.carb);
+  const fat=readNum('approve-fat-'+clientId,existingTgt.fat);
+  const patch={approved:true,access_expires_at:expiresStr};
+  if([cal,prot,carb,fat].some(v=>v!=null))patch.targets={cal:cal||0,prot:prot||0,carb:carb||0,fat:fat||0};
   try{
-    await SB.patch('profiles',`id=eq.${clientId}`,{approved:true,access_expires_at:expiresStr});
+    await SB.patch('profiles',`id=eq.${clientId}`,patch);
     ALL_PROFILES=await SB.get('profiles','select=*&order=created_at.asc');
     renderAdminDashboard();
   }catch(e){alert('No se pudo aprobar. Verifica tu conexión.');}
