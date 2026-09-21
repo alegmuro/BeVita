@@ -192,6 +192,7 @@ input[type=number]{text-align:center}
 .food-search-item:hover{background:#F8F7FD}
 .food-search-item-sub{display:block;font-size:10px;color:#ADAAB8;margin-top:1px}
 .food-search-empty{padding:8px 10px;font-size:12px;color:#ADAAB8}
+.food-search-group-label{position:sticky;top:0;background:#F8F7FB;padding:5px 10px;font-size:10px;font-weight:600;color:#8B8896;text-transform:uppercase;letter-spacing:0.3px;border-bottom:0.5px solid #E7E5EF}
 .today-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
 .today-card{background:#F4F3F7;border-radius:12px;padding:12px 14px;cursor:pointer;transition:background 0.15s;border:none;text-align:left;font-family:inherit}
 .today-card:hover{background:#EDEBF5}
@@ -1887,24 +1888,37 @@ async function addRow(mealKey,data){
 // forma de filtrar). El alimento elegido se guarda en data-food-name de la
 // fila (no en un <select>), así que calcFoodRow() y collectDayFromDom()
 // leen de ahí.
+// Muestra la lista agrupada por categoría (como el <select> de antes, con
+// sus optgroups) tanto al enfocar el campo vacío como mientras se escribe
+// — a pedido de la coach: quería de vuelta la lista agrupada, pero con
+// buscador encima en vez de tener que desplazarse por todo el catálogo.
 function foodSearchInput(id,query){
   const row=document.getElementById('frow-'+id);
   if(row)delete row.dataset.foodName; // escribir de nuevo invalida la selección anterior, hasta que se elija otra vez de la lista
   calcFoodRow(id);
   const box=document.getElementById('fsr-'+id);
   if(!box)return;
+  if(!FOODS_CACHE){box.style.display='none';box.innerHTML='';return;}
   const q=query.trim().toLowerCase();
-  if(!q||!FOODS_CACHE){box.style.display='none';box.innerHTML='';return;}
-  const matches=Object.keys(FOODS_CACHE).filter(n=>n.toLowerCase().includes(q)).sort((a,b)=>a.localeCompare(b,'es')).slice(0,40);
-  if(!matches.length){
+  const byCat={};
+  Object.keys(FOODS_CACHE).forEach(n=>{
+    if(q&&!n.toLowerCase().includes(q))return;
+    const c=FOODS_CACHE[n].category||'otros';
+    (byCat[c]=byCat[c]||[]).push(n);
+  });
+  const cats=FOOD_CAT_ORDER.filter(c=>byCat[c]&&byCat[c].length);
+  if(!cats.length){
     box.innerHTML='<div class="food-search-empty">Sin resultados</div>';
     box.style.display='block';
     return;
   }
-  box.innerHTML=matches.map(n=>{
-    const f=FOODS_CACHE[n];
-    const suffix=(f.unit_label&&f.unit_grams)?` — 1 ${f.unit_label} ≈ ${f.unit_grams}g`:'';
-    return `<div class="food-search-item" onmousedown="foodSearchPick(${id},'${n.replace(/'/g,"\\'")}')">${n}${suffix?`<span class="food-search-item-sub">${suffix}</span>`:''}</div>`;
+  box.innerHTML=cats.map(c=>{
+    const items=byCat[c].sort((a,b)=>a.localeCompare(b,'es')).map(n=>{
+      const f=FOODS_CACHE[n];
+      const suffix=(f.unit_label&&f.unit_grams)?` — 1 ${f.unit_label} ≈ ${f.unit_grams}g`:'';
+      return `<div class="food-search-item" onmousedown="foodSearchPick(${id},'${n.replace(/'/g,"\\'")}')">${n}${suffix?`<span class="food-search-item-sub">${suffix}</span>`:''}</div>`;
+    }).join('');
+    return `<div class="food-search-group-label">${FOOD_CAT_LABELS[c]}</div>${items}`;
   }).join('');
   box.style.display='block';
 }
