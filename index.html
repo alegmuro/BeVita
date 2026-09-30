@@ -2822,19 +2822,102 @@ function adminGapPill(cls,val,t,unit){
   return `<span class="pill ${cls}"${ok?'':' style="background:#FFE1DD;color:#B8271A"'}">${Math.round(val)}${t?'/'+Math.round(t):''}${unit}${gapTxt}</span>`;
 }
 
+// ── META DIARIA (calorías/macros) — editable desde el panel de la coach ──
+// Antes el único lugar donde se podía fijar "targets" (la meta diaria de
+// calorías/proteína/carbs/grasa) era al aprobar a la clienta por primera
+// vez (ver adminApproveClient) — una vez aprobada, no había forma de
+// volver a cambiarla desde el panel de la coach (el único otro camino,
+// showSettingsModal, edita la meta de QUIEN esté con la sesión abierta en
+// ese momento, no sirve para que la coach cambie la de una clienta). Esto
+// agrega un formulario editable aquí mismo, en Nutrición, más un
+// historial (tabla target_history) de cada cambio — ver
+// supabase-target-history-migration.sql.
+function adminTargetFormHtml(client,tgt,firstName){
+  return `<div class="dash-section" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+      <div class="dash-section-title" style="margin-bottom:0">Meta diaria de ${firstName}</div>
+      <a href="#" id="tgt-history-toggle" onclick="event.preventDefault();adminToggleTargetHistory('${client.id}')" style="font-size:11px;font-weight:700;color:#5B4FE9;text-decoration:none">Ver historial</a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 10px;margin-bottom:10px">
+      <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Calorías (kcal)</label><input type="number" id="tgt-cal-input" value="${tgt.cal||''}" min="0"></div>
+      <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Proteína (g)</label><input type="number" id="tgt-prot-input" value="${tgt.prot||''}" min="0"></div>
+      <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Carbs (g)</label><input type="number" id="tgt-carb-input" value="${tgt.carb||''}" min="0"></div>
+      <div><label style="font-size:11px;color:#8B8896;display:block;margin-bottom:2px">Grasa (g)</label><input type="number" id="tgt-fat-input" value="${tgt.fat||''}" min="0"></div>
+    </div>
+    <input type="text" id="tgt-note-input" placeholder="Nota (opcional) — ej: baja a 1300 por meseta de 2 semanas" style="margin-bottom:8px;width:100%">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-sm primary" onclick="adminSaveTargets('${client.id}')">Guardar meta</button>
+      <span class="save-msg" id="tgt-save-msg">✓ Guardado</span>
+    </div>
+    <div id="tgt-history-body" style="display:none;margin-top:12px"></div>
+  </div>`;
+}
+
+async function adminSaveTargets(clientId){
+  const readNum=id=>{const n=parseFloat(document.getElementById(id)?.value);return isNaN(n)?0:n;};
+  const targets={cal:readNum('tgt-cal-input'),prot:readNum('tgt-prot-input'),carb:readNum('tgt-carb-input'),fat:readNum('tgt-fat-input')};
+  const noteInput=document.getElementById('tgt-note-input');
+  const note=noteInput?.value.trim()||null;
+  const result=await SB.patch('profiles',`id=eq.${clientId}`,{targets});
+  if(!result){alert('No se pudo guardar la meta. Verifica tu conexión e intenta de nuevo.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:''));return;}
+  // El historial es un registro aparte, de solo-agregar — no se toca ni se
+  // borra nada anterior, cada guardado deja una fila nueva con fecha.
+  await SB.post('target_history',{profile_id:clientId,...targets,note});
+  const client=ALL_PROFILES.find(p=>p.id===clientId);
+  if(client)client.targets=targets;
+  if(typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.id===clientId){PROFILE.targets=targets;TARGETS=Object.assign({},targets);}
+  if(noteInput)noteInput.value='';
+  const msg=document.getElementById('tgt-save-msg');
+  if(msg){msg.classList.add('show');setTimeout(()=>msg.classList.remove('show'),2000);}
+  const histBody=document.getElementById('tgt-history-body');
+  if(histBody&&histBody.style.display!=='none')await adminRenderTargetHistoryList(clientId);
+}
+
+async function adminToggleTargetHistory(clientId){
+  const body=document.getElementById('tgt-history-body');
+  const toggle=document.getElementById('tgt-history-toggle');
+  if(!body)return;
+  const opening=body.style.display==='none';
+  body.style.display=opening?'':'none';
+  if(toggle)toggle.textContent=opening?'Ocultar historial':'Ver historial';
+  if(opening)await adminRenderTargetHistoryList(clientId);
+}
+
+async function adminRenderTargetHistoryList(clientId){
+  const body=document.getElementById('tgt-history-body');
+  if(!body)return;
+  body.innerHTML='<div class="empty-state" style="padding:10px">Cargando...</div>';
+  let rows=await SB.get('target_history',`profile_id=eq.${clientId}&order=created_at.desc&limit=30`);
+  // Si todavía no hay ningún cambio registrado pero la clienta ya tenía una
+  // meta activa (de antes de que existiera este historial), se deja un
+  // primer registro con el valor actual — así el historial no arranca
+  // vacío para las clientas que ya venían de antes de este cambio.
+  if(!rows||!rows.length){
+    const client=ALL_PROFILES.find(p=>p.id===clientId);
+    const tgt=client?.targets;
+    if(tgt&&(tgt.cal||tgt.prot||tgt.carb||tgt.fat)){
+      await SB.post('target_history',{profile_id:clientId,cal:tgt.cal||0,prot:tgt.prot||0,carb:tgt.carb||0,fat:tgt.fat||0,note:'Meta registrada al activar el historial'});
+      rows=await SB.get('target_history',`profile_id=eq.${clientId}&order=created_at.desc&limit=30`);
+    }
+  }
+  if(!rows||!rows.length){body.innerHTML='<div class="empty-state" style="padding:10px">Sin cambios registrados aún.</div>';return;}
+  body.innerHTML=`<div class="dash-section-title" style="margin-bottom:8px">Historial de metas</div>`+rows.map(r=>`<div style="padding:8px 0;border-bottom:1px solid #F1EFF7">
+    <div style="font-size:11px;font-weight:700;color:#8B8896;margin-bottom:3px">${formatDate(r.created_at.slice(0,10))}</div>
+    <div class="hist-pills">
+      <span class="pill p-cal">${r.cal} kcal</span>
+      <span class="pill p-prot">${r.prot}g P</span>
+      <span class="pill p-carb">${r.carb}g C</span>
+      <span class="pill p-fat">${r.fat}g G</span>
+    </div>
+    ${r.note?`<div style="font-size:12px;color:#4B4855;margin-top:5px">${r.note}</div>`:''}
+  </div>`).join('');
+}
+
 async function adminRenderNutricionDetail(client,body){
   const rows=await SB.get('diary',`profile_id=eq.${client.id}&order=date.desc&limit=14`);
   const tgt=client.targets||{cal:1500,prot:120,carb:150,fat:50};
-  const metaHtml=`<div class="dash-section" style="margin-bottom:12px">
-    <div class="dash-section-title">Meta diaria de ${(client.name||'').split(' ')[0]||'la clienta'}</div>
-    <div class="hist-pills" style="margin-top:6px">
-      <span class="pill p-cal">${tgt.cal} kcal</span>
-      <span class="pill p-prot">${tgt.prot}g P</span>
-      <span class="pill p-carb">${tgt.carb}g C</span>
-      <span class="pill p-fat">${tgt.fat}g G</span>
-    </div>
-  </div>`;
   const firstName=(client.name||'').split(' ')[0]||'la clienta';
+  const metaHtml=adminTargetFormHtml(client,tgt,firstName);
   if(!rows||!rows.length){
     body.innerHTML=metaHtml+'<div class="empty-state">Sin registros aún.</div>'+adminChatWidgetHtml('nutricion');
     await adminRenderChatWidget(client.id,'nutricion',firstName);
