@@ -95,13 +95,35 @@ body{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI'
 .sum-label{font-size:11px;color:#8B8896;margin-bottom:2px}
 .sum-val{font-size:22px;font-weight:500;line-height:1.1}
 .sum-unit{font-size:11px;color:#ADAAB8}
-.nutri-summary-card{background:#fff;border:1px solid #E7E5EF;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+.nutri-summary-card{background:#fff;border:1px solid #E7E5EF;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
 .nutri-summary-cal{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#17171A}
 .nutri-summary-cal .dim,.nutri-summary-macro-val .dim{font-size:11px;font-weight:500;color:#8B8896}
 .nutri-summary-pct{font-size:11px;font-weight:700;color:#17C39B}
 .nutri-summary-macros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:2px}
 .nutri-summary-macro-label{font-size:10px;color:#8B8896}
 .nutri-summary-macro-val{font-size:12px;font-weight:700;color:#17171A}
+
+/* MEDIDORES DE NUTRICIÓN — un "meter" por cada macro (calorías + proteína/
+   carbs/grasa), para que la clienta vea de un vistazo cuánto le falta para
+   llegar a su meta del día, no solo el número. El track usa el mismo tono
+   claro que ya existía en los pills del panel de la coach (p-cal/p-prot/
+   p-carb/p-fat) y el relleno el color de barra que ya existía (bar-cal/
+   bar-prot/bar-carb/bar-fat) — así queda consistente con el resto de la
+   app, solo que ahora también se ve en "Hoy" de Nutrición.
+   Si se pasa de la meta, el relleno cambia a rojo (misma lógica que
+   rest-over) para que "te pasaste" se note en la barra, no solo en el
+   texto de abajo.*/
+.nutri-meter-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:5px}
+.nutri-meter-label{font-size:12px;font-weight:700;color:#17171A}
+.nutri-meter-val{font-size:11px;color:#8B8896}
+.nutri-meter-val .dim{color:#ADAAB8}
+.nutri-meter-track{border-radius:5px;height:9px;overflow:hidden}
+.nutri-meter-fill{height:9px;border-radius:5px;transition:width 0.3s}
+.track-cal{background:#FFE7E2}.track-prot{background:#EAE8FB}.track-carb{background:#FBF0D6}.track-fat{background:#DFF7EF}
+.fill-cal{background:#FF6B5B}.fill-prot{background:#5B4FE9}.fill-carb{background:#F0A202}.fill-fat{background:#17C39B}
+.nutri-meter-fill.bar-over{background:#DC3B3B}
+.nutri-meter-rest{font-size:11px;font-weight:700;margin-top:4px}
+.nutri-meter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .nutri-subnav{display:flex;background:#EDEBF5;border-radius:11px;padding:3px;gap:0}
 .nutri-subnav .chart-tab{flex:1 1 0;border:none;background:transparent;border-radius:9px;padding:7px 16px;font-size:12px;font-weight:600;color:#6E6B78}
 .nutri-subnav .chart-tab.active{background:#fff;color:#17171A;box-shadow:0 1px 2px rgba(23,23,26,0.08)}
@@ -710,17 +732,34 @@ canvas{display:block;width:100%;max-width:100%}
         <span style="font-size:11px;color:#ADAAB8" id="nutri-sync-indicator"></span>
       </div>
       <div class="nutri-summary-card">
-        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
-          <span class="nutri-summary-cal"><span id="tot-cal">0</span><span class="dim"> / <span id="cal-target-lbl">0</span> kcal</span></span>
-          <span class="nutri-summary-pct" id="pct-cal">0%</span>
+        <div class="nutri-meter">
+          <div class="nutri-meter-top">
+            <span class="nutri-meter-label">Calorías</span>
+            <span class="nutri-meter-val"><span id="tot-cal">0</span><span class="dim"> / <span id="cal-target-lbl">0</span> kcal</span></span>
+          </div>
+          <div class="nutri-meter-track track-cal"><div class="nutri-meter-fill fill-cal" id="bar-cal" style="width:0%"></div></div>
+          <div class="nutri-meter-rest" id="rest-cal"></div>
         </div>
-        <div class="prog-bar-bg"><div class="prog-bar bar-cal" id="bar-cal" style="width:0%"></div></div>
-        <div class="nutri-summary-macros">
-          <div><div class="nutri-summary-macro-label">Proteína</div><div class="nutri-summary-macro-val"><span id="tot-prot">0</span><span class="dim"> /<span id="prot-target-lbl">0</span>g</span></div></div>
-          <div><div class="nutri-summary-macro-label">Carbs</div><div class="nutri-summary-macro-val"><span id="tot-carb">0</span><span class="dim"> /<span id="carb-target-lbl">0</span>g</span></div></div>
-          <div><div class="nutri-summary-macro-label">Grasa</div><div class="nutri-summary-macro-val"><span id="tot-fat">0</span><span class="dim"> /<span id="fat-target-lbl">0</span>g</span></div></div>
+        <div class="nutri-meter-grid">
+          <div class="nutri-meter">
+            <div class="nutri-meter-top"><span class="nutri-meter-label">Proteína</span></div>
+            <div class="nutri-meter-val"><span id="tot-prot">0</span><span class="dim">/<span id="prot-target-lbl">0</span>g</span></div>
+            <div class="nutri-meter-track track-prot" style="margin-top:5px"><div class="nutri-meter-fill fill-prot" id="bar-prot" style="width:0%"></div></div>
+            <div class="nutri-meter-rest" id="rest-prot"></div>
+          </div>
+          <div class="nutri-meter">
+            <div class="nutri-meter-top"><span class="nutri-meter-label">Carbs</span></div>
+            <div class="nutri-meter-val"><span id="tot-carb">0</span><span class="dim">/<span id="carb-target-lbl">0</span>g</span></div>
+            <div class="nutri-meter-track track-carb" style="margin-top:5px"><div class="nutri-meter-fill fill-carb" id="bar-carb" style="width:0%"></div></div>
+            <div class="nutri-meter-rest" id="rest-carb"></div>
+          </div>
+          <div class="nutri-meter">
+            <div class="nutri-meter-top"><span class="nutri-meter-label">Grasa</span></div>
+            <div class="nutri-meter-val"><span id="tot-fat">0</span><span class="dim">/<span id="fat-target-lbl">0</span>g</span></div>
+            <div class="nutri-meter-track track-fat" style="margin-top:5px"><div class="nutri-meter-fill fill-fat" id="bar-fat" style="width:0%"></div></div>
+            <div class="nutri-meter-rest" id="rest-fat"></div>
+          </div>
         </div>
-        <div style="display:none"><span id="rest-cal"></span><span id="rest-prot"></span><span id="rest-carb"></span><span id="rest-fat"></span><span id="pct-prot"></span><span id="pct-carb"></span><span id="pct-fat"></span><span id="bar-prot"></span><span id="bar-carb"></span><span id="bar-fat"></span></div>
       </div>
       <div id="meals-container"></div>
 
@@ -3254,12 +3293,16 @@ function updateAll(){
     const rest=Math.round(target-val);
     const el=document.getElementById('rest-'+key);
     if(el){
-      if(rest>0){el.textContent=`faltan ${rest}${unit}`;el.className='sum-rest rest-ok';}
-      else if(rest<0){el.textContent=`+${Math.abs(rest)}${unit} extra`;el.className='sum-rest rest-over';}
-      else{el.textContent='✓ meta cumplida';el.className='sum-rest rest-ok';}
+      if(rest>0){el.textContent=`Faltan ${rest}${unit}`;el.className='nutri-meter-rest rest-ok';}
+      else if(rest<0){el.textContent=`+${Math.abs(rest)}${unit} de más`;el.className='nutri-meter-rest rest-over';}
+      else{el.textContent='✓ Meta cumplida';el.className='nutri-meter-rest rest-ok';}
     }
-    const pct=Math.min(Math.round(val/target*100),100);
-    const bar=document.getElementById('bar-'+key);if(bar)bar.style.width=pct+'%';
+    // La barra se llena hasta el 100% aunque se haya pasado de la meta (no
+    // sigue creciendo) — y cambia a rojo cuando se pasó, para que se note
+    // en la barra misma, no solo en el texto de "de más" de abajo.
+    const pct=target?Math.min(Math.round(val/target*100),100):0;
+    const bar=document.getElementById('bar-'+key);
+    if(bar){bar.style.width=pct+'%';bar.classList.toggle('bar-over',target>0&&val>target);}
     const pctEl=document.getElementById('pct-'+key);
     if(pctEl){pctEl.textContent=Math.round(val/target*100)+'%';pctEl.style.color=val>target*1.05?'#DC3B3B':val>=target*0.9?'#17C39B':'#ADAAB8';}
   });
