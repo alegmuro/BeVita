@@ -364,6 +364,16 @@ canvas{display:block;width:100%;max-width:100%}
 .btn-icon{background:none;border:0.5px solid #E7E5EF;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;color:#6B6878}
 .btn-icon:hover{background:#EDEBF5}
 
+.help-btn{width:18px;height:18px;border-radius:50%;border:1px solid #C9C5DE;background:#F4F3F7;color:#6B6878;font-size:11px;font-weight:700;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.help-btn:hover{background:#EDEBF5;border-color:#5B4FE9;color:#5B4FE9}
+.help-modal-overlay{display:none;position:fixed;inset:0;background:rgba(23,23,26,0.4);z-index:1100;align-items:center;justify-content:center;padding:20px}
+.help-modal-box{background:#fff;border-radius:16px;padding:20px;max-width:360px;width:100%;max-height:80vh;overflow-y:auto}
+.help-modal-title{font-size:15px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.help-modal-tips{display:flex;flex-direction:column;gap:10px}
+.help-modal-tip{font-size:13px;color:#4B4855;line-height:1.5;display:flex;gap:8px}
+.help-modal-tip .tip-dot{flex-shrink:0;color:#5B4FE9;font-weight:700}
+.help-modal-close{background:none;border:0;font-size:18px;color:#ADAAB8;cursor:pointer;line-height:1;padding:0 2px}
+
 @media(max-width:520px){
   .summary{grid-template-columns:repeat(2,1fr)}
   .prog-grid{grid-template-columns:repeat(2,1fr)}
@@ -477,55 +487,18 @@ canvas{display:block;width:100%;max-width:100%}
     <div class="setup-step" id="step-2">
       <div id="step2-general">
       <div class="setup-title">Tu InBody 📊</div>
-      <div class="setup-sub">Sube una foto de tu resultado InBody — Claude leerá los datos y calculará tus metas automáticamente</div>
-
-      <div class="inbody-upload-area" id="upload-area" onclick="document.getElementById('ib-file-input').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
-        <div class="upload-icon">📷</div>
-        <div class="upload-label">Toca para subir foto del InBody</div>
-        <div class="upload-sub">JPG, PNG — la foto de la hoja completa</div>
-        <input type="file" id="ib-file-input" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+      <div class="setup-sub">Si tienes un InBody reciente a la mano, ingresa los datos — es opcional</div>
+      <div class="setup-grid" style="margin-top:12px">
+        <div class="setup-field"><label>Peso (kg)</label><input type="number" id="ib-peso-setup" step="0.1"></div>
+        <div class="setup-field"><label>% Grasa</label><input type="number" id="ib-pgc-setup" step="0.1"></div>
+        <div class="setup-field"><label>MME muscular (kg)</label><input type="number" id="ib-mme-setup" step="0.1"></div>
+        <div class="setup-field"><label>Masa grasa (kg)</label><input type="number" id="ib-grasa-setup" step="0.1"></div>
+        <div class="setup-field"><label>Grasa visceral (nv)</label><input type="number" id="ib-visceral-setup" step="1"></div>
+        <div class="setup-field"><label>Score InBody</label><input type="number" id="ib-score-setup" step="1"></div>
+        <div class="setup-field" style="grid-column:span 2"><label>Fecha del InBody</label><input type="date" id="ib-fecha-setup"></div>
       </div>
-
-      <img id="ib-preview" class="preview-img" style="display:none">
-
-      <div id="ai-loading" style="display:none">
-        <div style="font-size:13px;color:#4B4855;text-align:center;margin-top:8px">Analizando tu InBody...</div>
-        <div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
-      </div>
-
-      <div id="ai-result-block" style="display:none">
-        <div class="ai-result">
-          <div class="ai-result-title">Datos extraídos — revisa y ajusta si es necesario</div>
-          <div class="ai-fields">
-            <div class="ai-field"><label>Peso (kg)</label><input type="number" id="ai-peso" step="0.1"></div>
-            <div class="ai-field"><label>% Grasa</label><input type="number" id="ai-pgc" step="0.1"></div>
-            <div class="ai-field"><label>MME muscular (kg)</label><input type="number" id="ai-mme" step="0.1"></div>
-            <div class="ai-field"><label>Masa grasa (kg)</label><input type="number" id="ai-grasa" step="0.1"></div>
-            <div class="ai-field"><label>Grasa visceral (nv)</label><input type="number" id="ai-visceral" step="1"></div>
-            <div class="ai-field"><label>Score InBody</label><input type="number" id="ai-score" step="1"></div>
-            <div class="ai-field" style="grid-column:span 2"><label>Fecha del InBody</label><input type="text" id="ai-fecha"></div>
-            <div class="ai-field"><label>Ingesta recomendada (kcal)</label><input type="number" id="ai-kcal-rec" step="1"></div>
-            <div class="ai-field"><label>Altura (cm)</label><input type="number" id="ai-altura" step="1"></div>
-          </div>
-        </div>
-        <div class="ai-metas">
-          <div class="ai-metas-title">Metas sugeridas por Claude</div>
-          <div class="ai-metas-grid">
-            <div class="ai-meta-card"><div class="ai-meta-val c-cal" id="sug-cal">—</div><div class="ai-meta-lbl">kcal</div></div>
-            <div class="ai-meta-card"><div class="ai-meta-val c-prot" id="sug-prot">—</div><div class="ai-meta-lbl">prot g</div></div>
-            <div class="ai-meta-card"><div class="ai-meta-val c-carb" id="sug-carb">—</div><div class="ai-meta-lbl">carbs g</div></div>
-            <div class="ai-meta-card"><div class="ai-meta-val c-fat" id="sug-fat">—</div><div class="ai-meta-lbl">grasa g</div></div>
-          </div>
-          <div class="ai-explanation" id="ai-explanation"></div>
-          <div style="font-size:11px;color:#8B8896;margin-top:8px">¿No te convencen? Ajusta los campos arriba y recalcula.</div>
-          <button class="btn-sm" style="margin-top:6px;width:100%" onclick="recalcMetas()">↻ Recalcular metas</button>
-        </div>
-      </div>
-
-      <div id="step1-actions" style="display:none;margin-top:12px">
-        <button class="btn-sm primary" style="width:100%;padding:10px;font-size:14px" onclick="goStep(3)">Usar estas metas →</button>
-      </div>
-      <span class="skip-link" onclick="skipInBody()">Saltar por ahora — configurar metas manualmente</span>
+      <button class="btn-sm primary" style="width:100%;padding:10px;font-size:14px;margin-top:16px" onclick="goStep(3)">Continuar →</button>
+      <span class="skip-link" onclick="goStep(3)">Saltar por ahora — no tengo un InBody a mano</span>
       </div>
       <div id="step2-nuevo" style="display:none">
         <div class="setup-title">Motivación y objetivo 🎯</div>
@@ -620,13 +593,35 @@ canvas{display:block;width:100%;max-width:100%}
   </div>
 </div>
 
+<!-- RESTRICTED SCREEN (link general sin ?p= reconocido ni perfil recordado —
+     ya no muestra la lista de perfiles, solo un mensaje) -->
+<div class="lock-screen" id="restricted-screen" style="display:none">
+  <div class="lock-box" style="text-align:center">
+    <div class="lock-logo"><img src="icon-192.png" alt=""><span>BeVita</span></div>
+    <div style="font-size:38px;margin-bottom:10px">🔒</div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:8px">Este enlace es privado</div>
+    <div style="font-size:13px;color:#6B6878;line-height:1.5">Para entrar necesitas tu link personal — pídeselo a tu coach.</div>
+  </div>
+</div>
+
+<!-- AYUDA POR PESTAÑA (ícono "?" junto al título — ver showTabHelp / TAB_HELP) -->
+<div class="help-modal-overlay" id="tab-help-overlay" onclick="if(event.target===this)closeTabHelp()">
+  <div class="help-modal-box">
+    <div class="help-modal-title"><span id="tab-help-title">Ayuda</span><button type="button" class="help-modal-close" onclick="closeTabHelp()" aria-label="Cerrar">✕</button></div>
+    <div class="help-modal-tips" id="tab-help-tips"></div>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div class="app" id="main-app" style="display:none">
   <div class="app-header">
     <div style="display:flex;align-items:center;gap:10px">
       <button type="button" class="hamburger-btn" onclick="toggleMenuOverlay(true)" aria-label="Abrir menú">☰</button>
       <div>
-        <h1 id="app-header-title" style="font-size:18px;font-weight:500">BeVita</h1>
+        <span style="display:flex;align-items:center;gap:6px">
+          <h1 id="app-header-title" style="font-size:18px;font-weight:500">BeVita</h1>
+          <button type="button" class="help-btn" id="tab-help-btn" onclick="showTabHelp()" title="Ayuda de esta pestaña" aria-label="Ayuda de esta pestaña">?</button>
+        </span>
         <p id="app-header-sub" style="font-size:12px;color:#8B8896;margin-top:2px">Registro diario de alimentación</p>
       </div>
     </div>
@@ -758,51 +753,10 @@ canvas{display:block;width:100%;max-width:100%}
       </div>
       <div id="inbody-display-datos"></div>
 
-      <!-- Mode selector -->
-      <div style="display:flex;gap:8px;margin-top:12px;margin-bottom:4px">
-        <button class="btn-sm" id="ib-mode-photo" onclick="setIbMode('photo')" style="flex:1">📷 Subir foto</button>
-        <button class="btn-sm" id="ib-mode-manual" onclick="setIbMode('manual')" style="flex:1">✏ Manual</button>
-      </div>
-
-      <!-- Photo mode -->
-      <div id="ib-photo-mode" style="display:none;margin-top:10px">
-        <div class="inbody-upload-area" id="upload-area-datos" onclick="document.getElementById('ib-file-datos').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDropDatos(event)">
-          <div class="upload-icon">📷</div>
-          <div class="upload-label">Toca para subir foto del InBody</div>
-          <div class="upload-sub">Claude extraerá los datos automáticamente</div>
-          <input type="file" id="ib-file-datos" accept="image/*" style="display:none" onchange="handleFileDatos(event)">
-        </div>
-        <img id="ib-preview-datos" class="preview-img" style="display:none">
-        <div id="ai-loading-datos" style="display:none;text-align:center;padding:16px">
-          <div style="font-size:13px;color:#4B4855;margin-bottom:8px">Analizando tu InBody...</div>
-          <div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
-        </div>
-        <div id="ai-result-datos" style="display:none">
-          <div class="ai-result" style="margin-top:8px">
-            <div class="ai-result-title">Datos extraídos — revisa y ajusta si es necesario</div>
-            <div class="ai-fields">
-              <div class="ai-field"><label>Peso (kg)</label><input type="number" id="ib-peso" step="0.1"></div>
-              <div class="ai-field"><label>% Grasa</label><input type="number" id="ib-pgc" step="0.1"></div>
-              <div class="ai-field"><label>MME (kg)</label><input type="number" id="ib-mme" step="0.1"></div>
-              <div class="ai-field"><label>Masa grasa (kg)</label><input type="number" id="ib-grasa" step="0.1"></div>
-              <div class="ai-field"><label>Visceral (nv)</label><input type="number" id="ib-visceral" step="1"></div>
-              <div class="ai-field"><label>Score InBody</label><input type="number" id="ib-score" step="1"></div>
-              <div class="ai-field"><label>TRM (kcal)</label><input type="number" id="ib-trm" step="1"></div>
-              <div class="ai-field"><label>Fecha</label><input type="date" id="ib-fecha"></div>
-              <div class="ai-field" style="grid-column:span 2"><label>Comentarios</label><textarea id="ib-notas" rows="2" placeholder="Notas sobre esta medición..."></textarea></div>
-            </div>
-          </div>
-          <div class="ai-explanation" id="ai-explanation-datos" style="margin-top:8px"></div>
-          <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
-            <button class="btn-sm primary" style="flex:1;padding:10px" onclick="saveInBody()">Guardar datos</button>
-            <button class="btn-sm" onclick="resetIbUpload()">↺ Nueva foto</button>
-            <span class="save-msg" id="save-ib-msg">✓ Guardado</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Manual mode -->
-      <div id="ib-manual-mode" style="display:none;margin-top:10px">
+      <!-- Entrada manual (se quitó el análisis por foto vía IA — ver decisión
+           del 30 sep 2026: la app no puede llamar a la IA de forma segura
+           desde el sitio publicado sin backend propio) -->
+      <div id="ib-manual-mode" style="margin-top:12px">
         <div class="inbody-form open" id="inbody-form" style="display:grid">
           <div><label>Peso (kg)</label><input type="number" id="ib-peso-m" step="0.1"></div>
           <div><label>% Grasa</label><input type="number" id="ib-pgc-m" step="0.1"></div>
@@ -1140,7 +1094,12 @@ async function init(){
     }
     const autoId=getAutoProfileId();
     if(autoId){selectProfile(autoId,'auto');return;}
-    showSelectScreen();
+    // El link general (sin ?p= reconocido y sin perfil recordado en este
+    // dispositivo) YA NO muestra la lista completa de perfiles — antes
+    // cualquiera que abriera ese link veía los nombres de todas las
+    // clientas. Ahora solo pide el link personal. La lista completa sigue
+    // existiendo únicamente para ti, vía el atajo ?lista=1 de arriba.
+    showRestrictedScreen();
   }catch(e){
     hideOverlay();
     alert('Error de conexión. Verifica tu internet e intenta de nuevo.');
@@ -1192,6 +1151,11 @@ function volverDesdeBlocked(){
   }
 }
 
+function showRestrictedScreen(){
+  hideAllScreens();
+  document.getElementById('restricted-screen').style.display='flex';
+}
+
 function showSelectScreen(){
   hideAllScreens();
   document.getElementById('select-screen').style.display='flex';
@@ -1230,7 +1194,7 @@ function selectProfile(id,mode){
 }
 
 function hideAllScreens(){
-  ['select-screen','lock-screen','setup-screen','blocked-screen'].forEach(id=>{
+  ['select-screen','lock-screen','setup-screen','blocked-screen','restricted-screen'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
 }
@@ -1483,8 +1447,16 @@ async function finishSetup(){
     const newProfile=Array.isArray(result)?result[0]:result;
     if(!newProfile?.id){hideOverlay();errEl.textContent='Error al crear perfil.';return;}
     ALL_PROFILES=await SB.get('profiles','select=*&order=created_at.asc');
-    if(aiInBodyData){
-      await SB.post('inbody',{profile_id:newProfile.id,date:document.getElementById('ai-fecha')?.value||today(),peso:parseFloat(document.getElementById('ai-peso')?.value)||null,pgc:parseFloat(document.getElementById('ai-pgc')?.value)||null,mme:parseFloat(document.getElementById('ai-mme')?.value)||null,grasa:parseFloat(document.getElementById('ai-grasa')?.value)||null,visceral:parseFloat(document.getElementById('ai-visceral')?.value)||null,score:parseFloat(document.getElementById('ai-score')?.value)||null,fecha_label:document.getElementById('ai-fecha')?.value||today()});
+    // InBody ingresado a mano en el paso 2 (ver decisión de quitar el
+    // análisis por IA — ver analyzeInBody, que ya no se usa desde aquí).
+    // Es opcional: si no puso peso, no se guarda nada.
+    const ibPesoSetup=parseFloat(document.getElementById('ib-peso-setup')?.value);
+    const hasManualIb=setupFlowType!=='nuevo'&&!isNaN(ibPesoSetup);
+    let ibEntrySetup=null;
+    if(hasManualIb){
+      const fechaSetup=document.getElementById('ib-fecha-setup')?.value||today();
+      ibEntrySetup={profile_id:newProfile.id,date:fechaSetup,peso:ibPesoSetup,pgc:parseFloat(document.getElementById('ib-pgc-setup')?.value)||null,mme:parseFloat(document.getElementById('ib-mme-setup')?.value)||null,grasa:parseFloat(document.getElementById('ib-grasa-setup')?.value)||null,visceral:parseFloat(document.getElementById('ib-visceral-setup')?.value)||null,score:parseFloat(document.getElementById('ib-score-setup')?.value)||null,fecha_label:fechaSetup};
+      await SB.post('inbody',ibEntrySetup);
     }
     hideOverlay();
     document.getElementById('setup-screen').style.display='none';
@@ -1494,10 +1466,10 @@ async function finishSetup(){
     }
     PROFILE={...newProfile};
     TARGETS=Object.assign({},PROFILE.targets);
-    if(aiInBodyData){
-      const ibData={'ib-peso':document.getElementById('ai-peso').value,'ib-pgc':document.getElementById('ai-pgc').value,'ib-mme':document.getElementById('ai-mme').value,'ib-grasa':document.getElementById('ai-grasa').value,'ib-visceral':document.getElementById('ai-visceral').value,'ib-score':document.getElementById('ai-score').value,'ib-fecha':document.getElementById('ai-fecha').value};
+    if(ibEntrySetup){
+      const ibData={'ib-peso':ibEntrySetup.peso,'ib-pgc':ibEntrySetup.pgc,'ib-mme':ibEntrySetup.mme,'ib-grasa':ibEntrySetup.grasa,'ib-visceral':ibEntrySetup.visceral,'ib-score':ibEntrySetup.score,'ib-fecha':ibEntrySetup.date};
       LS.set(ibKey,ibData);
-      const entry={date:ibData['ib-fecha']||today(),peso:ibData['ib-peso'],pgc:ibData['ib-pgc'],mme:ibData['ib-mme'],grasa:ibData['ib-grasa'],visceral:ibData['ib-visceral'],score:ibData['ib-score']};
+      const entry={date:ibEntrySetup.date,peso:ibEntrySetup.peso,pgc:ibEntrySetup.pgc,mme:ibEntrySetup.mme,grasa:ibEntrySetup.grasa,visceral:ibEntrySetup.visceral,score:ibEntrySetup.score};
       LS.set(ibHistKey,[entry]);
     }
     enterApp(PROFILE);
@@ -1806,7 +1778,7 @@ function showTab(t){
   updateHeaderTitle(t);
   if(t==='hoy'){renderDashboard();renderCoachNoteBanner();renderGoalWidgetsSection();}
   if(t==='nutricion') nutriSetView(nutriSubView);
-  if(t==='cuerpo'){renderProgreso();renderInBodyDatos();}
+  if(t==='cuerpo'){renderProgreso();renderInBodyDatos();setIbMode('manual');}
   if(t==='tendencias') renderTendencias();
   if(t==='bienestar') renderBienestar();
   if(t==='ejercicio') renderEjercicio();
@@ -1828,6 +1800,63 @@ const HEADER_BY_TAB={
   ajustes:['Ajustes','Tu cuenta y preferencias'],
   admin:['BeVita','Panel de coach']
 };
+
+// ── AYUDA POR PESTAÑA ────────────────────────────────────────
+// Tips cortos por pestaña, mostrados en la ventana emergente que abre el
+// ícono "?" junto al título (ver showTabHelp/closeTabHelp). Editar aquí
+// cambia el contenido de la ayuda sin tocar el resto de la app.
+const TAB_HELP={
+  hoy:{title:'Ayuda — Hoy',tips:[
+    'Aquí ves el resumen de tu día: calorías, entrenamiento, ánimo y tu última medida, todo en un vistazo.',
+    'Toca cualquier tarjeta (Nutrición, Ejercicio, Bienestar, Medidas) para ir directo a esa pestaña.',
+    'La racha cuenta los días seguidos en los que cumpliste tu meta de macros (dentro de ±10-15%).'
+  ]},
+  nutricion:{title:'Ayuda — Nutrición',tips:[
+    'Busca el alimento y agrégalo a Desayuno, Almuerzo, Cena o Snack. Si no lo encuentras, usa "+ Manual" y copia los datos del empaque.',
+    'La barra de arriba compara lo que llevas hoy contra tu meta de calorías y macros.',
+    'No olvides tocar "Guardar día" — así tu coach puede ver tu registro.',
+    'En "Historial" puedes revisar y editar días anteriores.'
+  ]},
+  cuerpo:{title:'Ayuda — Medidas',tips:[
+    'Aquí llevas tus datos InBody (peso, % grasa, MME, visceral, score) y tus medidas corporales (cintura, cadera, muslo, brazo, pecho).',
+    'Ingresa los datos a mano cada vez que tengas una medición nueva — queda guardado un historial automáticamente.',
+    'Para ver cómo han cambiado en el tiempo, ve a la pestaña Tendencias.'
+  ]},
+  ejercicio:{title:'Ayuda — Ejercicio',tips:[
+    '"Entreno de hoy" muestra lo que tu coach te asignó para el día — marca cada serie cuando la completes.',
+    '"Biblioteca" te deja agregar un ejercicio extra a tu plan de hoy, o registrar directo una sesión que ya hiciste.',
+    'Puedes quitar cualquier ejercicio de tu plan de hoy tocando la "×" junto a él.',
+    '"Historial" guarda todo lo que has completado.'
+  ]},
+  bienestar:{title:'Ayuda — Bienestar',tips:[
+    'Registra cómo te sientes hoy: ánimo, sueño, estrés — le da a tu coach contexto detrás de tus números.',
+    'En "Historial" ves cómo ha ido cambiando en el tiempo.'
+  ]},
+  tendencias:{title:'Ayuda — Tendencias',tips:[
+    'Aquí ves gráficas de tu progreso: peso, medidas corporales, calorías, entrenamientos y ánimo en el tiempo.',
+    'Usa las pestañas de arriba de cada gráfica para elegir qué indicador ver.',
+    'En "Historial" están todos tus registros de InBody y medidas en una lista.'
+  ]},
+  ajustes:{title:'Ayuda — Ajustes',tips:[
+    'Cambia tu PIN, tus datos personales o tus metas diarias.',
+    'Si eres la coach, aquí también encuentras el backup de tus datos y el link para que nuevas clientas se registren.'
+  ]},
+  admin:{title:'Ayuda — Clientes',tips:[
+    'Aquí ves a todas tus clientas: su actividad reciente, solicitudes pendientes de aprobación y su acceso.',
+    'Toca "Ver detalle →" para entrar al perfil completo de una clienta: plan, tendencias, nutrición, ejercicio y mensajes.',
+    'Usa "🔗 Copiar link" para darle a cada clienta su acceso privado, y "🔗 Link de registro para nuevas" para que alguien cree su perfil por primera vez.',
+    'Cuando apruebes una solicitud pendiente, ahí mismo puedes asignarle sus metas diarias.'
+  ]}
+};
+function showTabHelp(){
+  const help=TAB_HELP[currentTabName]||TAB_HELP.hoy;
+  document.getElementById('tab-help-title').textContent=help.title;
+  document.getElementById('tab-help-tips').innerHTML=help.tips.map(t=>`<div class="help-modal-tip"><span class="tip-dot">•</span><span>${t}</span></div>`).join('');
+  document.getElementById('tab-help-overlay').style.display='flex';
+}
+function closeTabHelp(){
+  document.getElementById('tab-help-overlay').style.display='none';
+}
 function updateHeaderTitle(t){
   const cfg=HEADER_BY_TAB[t]||['BeVita','Registro diario de alimentación'];
   const titleEl=document.getElementById('app-header-title');
@@ -3415,19 +3444,15 @@ async function getInBody(){
   return rows&&rows[0]?rows[0]:null;
 }
 
+// Ya no hay modo "foto" (se quitó el análisis por IA — ver comentario en el
+// HTML de #ib-manual-mode). Esta función solo prellena el formulario manual
+// con el último InBody guardado; se llama al entrar a la pestaña Medidas y
+// también desde editInBody() antes de sobreescribir con el registro elegido.
 async function setIbMode(mode){
-  document.getElementById('ib-photo-mode').style.display=mode==='photo'?'block':'none';
-  document.getElementById('ib-manual-mode').style.display=mode==='manual'?'block':'none';
-  document.getElementById('ib-mode-photo').className='btn-sm'+(mode==='photo'?' primary':'');
-  document.getElementById('ib-mode-manual').className='btn-sm'+(mode==='manual'?' primary':'');
-  // Pre-fill manual fields with existing data (getInBody() es async — antes
-  // se llamaba sin await, así que ib era una Promise y esto nunca rellenaba nada)
-  if(mode==='manual'){
-    const ib=await getInBody();
-    if(ib){
-      const map={peso:'ib-peso-m',pgc:'ib-pgc-m',mme:'ib-mme-m',grasa:'ib-grasa-m',visceral:'ib-visceral-m',score:'ib-score-m',trm:'ib-trm-m',date:'ib-fecha-m',notas:'ib-notas-m'};
-      Object.entries(map).forEach(([src,dst])=>{const el=document.getElementById(dst);if(el&&ib[src]!=null&&ib[src]!=='')el.value=ib[src];});
-    }
+  const ib=await getInBody();
+  if(ib){
+    const map={peso:'ib-peso-m',pgc:'ib-pgc-m',mme:'ib-mme-m',grasa:'ib-grasa-m',visceral:'ib-visceral-m',score:'ib-score-m',trm:'ib-trm-m',date:'ib-fecha-m',notas:'ib-notas-m'};
+    Object.entries(map).forEach(([src,dst])=>{const el=document.getElementById(dst);if(el&&ib[src]!=null&&ib[src]!=='')el.value=ib[src];});
   }
 }
 
@@ -3599,7 +3624,7 @@ async function renderInBodyDatos(){
   const rows=(await SB.get('inbody',`profile_id=eq.${PROFILE.id}&order=date.desc&limit=10`))||[];
   const ib=rows[0];
   if(!ib){
-    el.innerHTML='<div style="font-size:13px;color:#ADAAB8;margin-bottom:8px">Sin datos InBody aún. Sube una foto o ingresa manualmente.</div>';
+    el.innerHTML='<div style="font-size:13px;color:#ADAAB8;margin-bottom:8px">Sin datos InBody aún. Ingresa los datos manualmente abajo.</div>';
     return;
   }
   const historyHtml=rows.length?`<div style="font-size:11px;font-weight:600;color:#8B8896;text-transform:uppercase;letter-spacing:0.05em;margin:14px 0 6px">Registros anteriores</div>`+
