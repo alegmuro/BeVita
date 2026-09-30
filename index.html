@@ -612,6 +612,14 @@ canvas{display:block;width:100%;max-width:100%}
   </div>
 </div>
 
+<!-- ACTIVIDAD RECIENTE (campanita 🔔, solo admin — ver showAdminNotifPanel) -->
+<div class="help-modal-overlay" id="admin-notif-overlay" onclick="if(event.target===this)closeAdminNotifPanel()">
+  <div class="help-modal-box">
+    <div class="help-modal-title"><span>Actividad reciente</span><button type="button" class="help-modal-close" onclick="closeAdminNotifPanel()" aria-label="Cerrar">✕</button></div>
+    <div id="admin-notif-list" style="max-height:60vh;overflow-y:auto"></div>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div class="app" id="main-app" style="display:none">
   <div class="app-header">
@@ -621,6 +629,11 @@ canvas{display:block;width:100%;max-width:100%}
         <span style="display:flex;align-items:center;gap:6px">
           <h1 id="app-header-title" style="font-size:18px;font-weight:500">BeVita</h1>
           <button type="button" class="help-btn" id="tab-help-btn" onclick="showTabHelp()" title="Ayuda de esta pestaña" aria-label="Ayuda de esta pestaña">?</button>
+          <!-- Campanita de actividad reciente: a propósito va AQUÍ y no en
+               .header-right — .header-right se oculta por completo en
+               celular (ver @media max-width:520px), que es donde la coach
+               más usa la app, y esta notificación tiene que verse ahí. -->
+          <button type="button" id="admin-notif-btn" style="display:none;position:relative;width:24px;height:24px;border-radius:50%;border:1px solid #C9C5DE;background:#F4F3F7;color:#6B6878;font-size:12px;padding:0;cursor:pointer;flex-shrink:0;align-items:center;justify-content:center" onclick="showAdminNotifPanel()" title="Actividad reciente de tus clientas" aria-label="Actividad reciente de tus clientas">🔔<span id="admin-notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#FF6B5B;color:#fff;border-radius:20px;padding:0 4px;font-size:9px;font-weight:700;line-height:14px;min-width:14px;text-align:center">0</span></button>
         </span>
         <p id="app-header-sub" style="font-size:12px;color:#8B8896;margin-top:2px">Registro diario de alimentación</p>
       </div>
@@ -863,6 +876,12 @@ canvas{display:block;width:100%;max-width:100%}
       <div class="backup-title">Tu link personal</div>
       <div style="font-size:12px;color:#8B8896;margin-bottom:10px">Guárdalo — al abrirlo entras directo a tu pantalla de PIN, sin pasar por la lista de perfiles.</div>
       <button class="btn-sm primary" onclick="copyMyLink()">📋 Copiar mi link</button>
+    </div>
+    <div class="backup-section" id="ajustes-mensajes-section">
+      <div class="backup-title">Mensajes con tu coach</div>
+      <div id="client-msg-thread" style="max-height:260px;overflow-y:auto;border:0.5px solid #E7E5EF;border-radius:10px;margin-bottom:10px"></div>
+      <textarea id="client-msg-input" rows="2" placeholder="Escríbele a tu coach..." style="margin-bottom:8px"></textarea>
+      <button class="btn-sm primary" onclick="clientSendNote()">Enviar</button>
     </div>
     <div class="backup-section" id="my-plan-section" style="display:none"></div>
     <div class="backup-section">
@@ -1576,6 +1595,8 @@ function enterApp(profile){
   document.getElementById('header-name').textContent=PROFILE.name;
   const adminBtn=document.getElementById('admin-tab-btn');
   if(adminBtn)adminBtn.style.display=PROFILE.is_admin?'':'none';
+  const notifBtn=document.getElementById('admin-notif-btn');
+  if(notifBtn)notifBtn.style.display=PROFILE.is_admin?'flex':'none';
   const menuClientesRow=document.getElementById('menu-clientes-row');
   if(menuClientesRow)menuClientesRow.style.display=PROFILE.is_admin?'':'none';
   // La coach tiene su propio perfil de CLIENTE aparte para su seguimiento
@@ -1587,7 +1608,7 @@ function enterApp(profile){
   document.querySelectorAll('.client-only-nav').forEach(el=>{el.style.display=PROFILE.is_admin?'none':'';});
   const bottomNav=document.getElementById('bottom-nav');
   if(bottomNav)bottomNav.style.display=PROFILE.is_admin?'none':'';
-  if(PROFILE.is_admin)refreshAdminBadge();
+  if(PROFILE.is_admin){refreshAdminBadge();refreshAdminNotifBadge();}
   document.getElementById('main-app').style.display='';
   if(PROFILE.is_admin){
     showTab('admin');
@@ -1656,6 +1677,47 @@ function renderAjustes(){
   // de la coach, no algo que un cliente deba tocar — solo el reporte
   // semanal (descarga de solo lectura) queda disponible para todas.
   document.getElementById('ajustes-admin-backup-section').style.display=PROFILE.is_admin?'':'none';
+  // El hilo de mensajes con la coach es solo para clientas — la coach no
+  // tiene "una coach" a la que escribirle desde su propio Ajustes.
+  const msgSection=document.getElementById('ajustes-mensajes-section');
+  if(msgSection){
+    msgSection.style.display=PROFILE.is_admin?'none':'';
+    if(!PROFILE.is_admin)renderClientMsgThread();
+  }
+}
+
+// ── MENSAJES: hilo completo de ida y vuelta (vista de la clienta) ──────
+// Antes la clienta solo veía la última nota de la coach en un banner de
+// "Hoy" (ver renderCoachNoteBanner) y no podía responder. Ahora, desde
+// Ajustes, ve el hilo completo (sus mensajes y los de la coach) y puede
+// escribir uno nuevo — mismo patrón que adminRenderMensajes, del otro lado.
+async function renderClientMsgThread(){
+  const el=document.getElementById('client-msg-thread');
+  if(!el||!PROFILE)return;
+  el.innerHTML='<div class="empty-state" style="padding:14px">Cargando...</div>';
+  const notes=await SB.get('client_notes',`profile_id=eq.${PROFILE.id}&order=created_at.asc&limit=50`);
+  // Las notas privadas de la coach (visible_to_client=false) nunca se
+  // muestran acá — siguen siendo solo para ella, igual que en el banner.
+  const thread=(notes||[]).filter(n=>n.sender==='client'||n.visible_to_client);
+  if(!thread.length){el.innerHTML='<div class="empty-state" style="padding:14px">Aún no hay mensajes — escríbele a tu coach abajo.</div>';return;}
+  el.innerHTML=thread.map(n=>{
+    const mine=n.sender==='client';
+    return`<div style="padding:10px 12px;border-bottom:1px solid #F1EFF7;${mine?'background:#F8F7FD':''}">
+      <div style="font-size:10px;font-weight:700;color:#8B8896;margin-bottom:3px">${mine?'Tú':'Tu coach'} · ${formatDate(n.created_at.slice(0,10))}</div>
+      <div style="font-size:13px;line-height:1.4">${n.note}</div>
+    </div>`;
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+async function clientSendNote(){
+  const input=document.getElementById('client-msg-input');
+  const note=input.value.trim();
+  if(!note||!PROFILE)return;
+  const result=await SB.post('client_notes',{profile_id:PROFILE.id,note,sender:'client',visible_to_client:true});
+  if(!result){alert('No se pudo enviar el mensaje. Verifica tu conexión e intenta de nuevo.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:''));return;}
+  input.value='';
+  renderClientMsgThread();
 }
 
 async function saveMiPerfil(){
@@ -1897,6 +1959,116 @@ function refreshAdminBadge(){
   badge.style.display=pending?'':'none';
 }
 
+// ── CAMPANITA 🔔: actividad reciente de TODAS las clientas ──────────
+// Antes, para notar que alguien registró algo, la coach tenía que entrar
+// clienta por clienta. Esto junta lo que registró cualquier clienta
+// (comida, InBody, medidas, bienestar, entreno) y los mensajes que le
+// escriban, sin importar en qué perfil esté viendo la coach en ese momento.
+const ADMIN_NOTIF_TYPES={
+  nutricion:{icon:'🍽',label:'Registró su comida',tab:'nutricion'},
+  inbody:{icon:'📊',label:'Registró un InBody',tab:'resumen'},
+  medidas:{icon:'📏',label:'Registró medidas corporales',tab:'tendencias'},
+  bienestar:{icon:'🙂',label:'Registró bienestar del día',tab:'resumen'},
+  ejercicio:{icon:'🏋',label:'Registró un entreno',tab:'ejercicio'},
+  mensaje:{icon:'💬',label:'Te escribió un mensaje',tab:'mensajes'}
+};
+
+function timeAgo(iso){
+  if(!iso)return'';
+  const mins=Math.round((Date.now()-new Date(iso).getTime())/60000);
+  if(mins<1)return'ahora';
+  if(mins<60)return`hace ${mins} min`;
+  const hrs=Math.round(mins/60);
+  if(hrs<24)return`hace ${hrs}h`;
+  const days=Math.round(hrs/24);
+  return`hace ${days}d`;
+}
+
+async function adminFetchRecentActivity(sinceISO){
+  const [diaryRows,ibRows,medRows,bwRows,exRows,msgRows]=await Promise.all([
+    SB.get('diary',`created_at=gt.${sinceISO}&order=created_at.desc&limit=40`),
+    SB.get('inbody',`saved_at=gt.${sinceISO}&order=saved_at.desc&limit=40`),
+    SB.get('medidas',`created_at=gt.${sinceISO}&order=created_at.desc&limit=40`),
+    SB.get('bienestar',`saved_at=gt.${sinceISO}&order=saved_at.desc&limit=40`),
+    SB.get('workout_logs',`created_at=gt.${sinceISO}&order=created_at.desc&limit=150`),
+    SB.get('client_notes',`sender=eq.client&created_at=gt.${sinceISO}&order=created_at.desc&limit=40`)
+  ]);
+  const nameOf=id=>{const p=(ALL_PROFILES||[]).find(x=>x.id===id);return p?p.name:'Alguien';};
+  const items=[];
+  (diaryRows||[]).forEach(r=>items.push({type:'nutricion',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.created_at,detail:formatDate(r.date)}));
+  (ibRows||[]).forEach(r=>items.push({type:'inbody',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.saved_at,detail:formatDate(r.date)}));
+  (medRows||[]).forEach(r=>items.push({type:'medidas',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.created_at,detail:formatDate(r.date)}));
+  (bwRows||[]).forEach(r=>items.push({type:'bienestar',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.saved_at,detail:formatDate(r.date)}));
+  (msgRows||[]).forEach(r=>items.push({type:'mensaje',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.created_at,detail:(r.note||'').slice(0,60)}));
+  // Un entreno guarda una fila por cada serie — se agrupa por clienta+fecha
+  // para no mostrar (ni contar) diez notificaciones por una sola sesión.
+  const exByKey={};
+  (exRows||[]).forEach(r=>{
+    const key=r.client_id+'|'+r.date;
+    if(!exByKey[key]||r.created_at>exByKey[key].ts)exByKey[key]={type:'ejercicio',clientId:r.client_id,clientName:nameOf(r.client_id),ts:r.created_at,detail:formatDate(r.date)};
+  });
+  items.push(...Object.values(exByKey));
+  items.sort((a,b)=>a.ts<b.ts?1:-1);
+  return items;
+}
+
+// "Desde cuándo" cuenta como nuevo: la última vez que esta coach abrió la
+// campanita EN ESTE dispositivo (localStorage, igual que el perfil
+// recordado). La primera vez, arranca mostrando solo lo de las últimas 24h
+// para no inundarla con historial viejo la primera vez que actualice.
+function adminNotifGetSince(){
+  let seen=LS.get('pt_admin_notif_seen');
+  if(!seen){seen=new Date(Date.now()-24*3600*1000).toISOString();LS.set('pt_admin_notif_seen',seen);}
+  return seen;
+}
+
+async function refreshAdminNotifBadge(){
+  if(!PROFILE?.is_admin)return;
+  const btn=document.getElementById('admin-notif-btn');
+  const badge=document.getElementById('admin-notif-badge');
+  if(!btn||!badge)return;
+  btn.style.display='flex';
+  const items=await adminFetchRecentActivity(adminNotifGetSince());
+  badge.textContent=items.length>9?'9+':String(items.length);
+  badge.style.display=items.length?'':'none';
+}
+
+async function showAdminNotifPanel(){
+  const list=document.getElementById('admin-notif-list');
+  document.getElementById('admin-notif-overlay').style.display='flex';
+  list.innerHTML='<div class="empty-state" style="padding:20px">Cargando...</div>';
+  const since=adminNotifGetSince();
+  const windowStart=new Date(Date.now()-14*24*3600*1000).toISOString();
+  const items=await adminFetchRecentActivity(windowStart);
+  list.innerHTML=items.length?items.map(it=>{
+    const cfg=ADMIN_NOTIF_TYPES[it.type]||{icon:'•',label:'Actividad',tab:'resumen'};
+    const isNew=it.ts>since;
+    return`<div onclick="adminNotifGoTo('${it.clientId}','${cfg.tab}')" style="display:flex;gap:10px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid #F1EFF7;cursor:pointer;${isNew?'background:#F8F7FD':''}">
+      <span style="font-size:18px;flex-shrink:0">${cfg.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${it.clientName}${isNew?' <span style="color:#5B4FE9;font-size:10px;font-weight:700">· nuevo</span>':''}</div>
+        <div style="font-size:12px;color:#6B6878">${cfg.label}${it.detail?' · '+it.detail:''}</div>
+      </div>
+      <span style="font-size:10px;color:#ADAAB8;white-space:nowrap;flex-shrink:0">${timeAgo(it.ts)}</span>
+    </div>`;
+  }).join(''):'<div class="empty-state" style="padding:20px">Sin actividad en los últimos 14 días.</div>';
+  // Abrir el panel marca todo como visto — la próxima vez, el número
+  // vuelve a arrancar en 0.
+  LS.set('pt_admin_notif_seen',new Date().toISOString());
+  refreshAdminNotifBadge();
+}
+
+function closeAdminNotifPanel(){
+  document.getElementById('admin-notif-overlay').style.display='none';
+}
+
+function adminNotifGoTo(clientId,tab){
+  closeAdminNotifPanel();
+  showTab('admin');
+  adminOpenClientDetail(clientId);
+  adminDetailSetTab(tab);
+}
+
 async function renderAdminDashboard(){
   if(!PROFILE?.is_admin)return;
   // Entrar a la pestaña "Clientes" siempre muestra primero la lista, nunca
@@ -1916,6 +2088,7 @@ async function renderAdminDashboard(){
   const freshProfiles=await SB.get('profiles','select=*&order=created_at.asc');
   if(freshProfiles)ALL_PROFILES=freshProfiles;
   refreshAdminBadge();
+  refreshAdminNotifBadge();
   const clients=ALL_PROFILES.filter(p=>!p.is_admin).sort((a,b)=>(a.approved===false?0:1)-(b.approved===false?0:1));
   if(!clients.length){container.innerHTML='<div class="empty-state">No hay clientes registrados aún. Comparte la app con tus clientes para que creen su perfil.</div>';return;}
   const todayStr=today();const from=getLast7()[0];
@@ -2126,12 +2299,12 @@ async function adminRenderResumen(client,body){
         <div style="background:#F4F3F7;border-radius:8px;padding:8px;text-align:center"><div style="font-size:15px;font-weight:600">${ib.mme||'—'} kg</div><div style="font-size:10px;color:#ADAAB8">MME</div></div>
       </div>
     </div>`:'<div class="empty-state" style="margin-bottom:14px">Sin datos InBody aún</div>'}
-    <div class="dash-section" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div class="dash-section" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap${lastNote&&lastNote.sender==='client'?';background:#FFF8E8;border-color:#F0DFA8':''}">
       <div>
-        <div style="font-size:11px;font-weight:700;color:#8B8896;text-transform:uppercase">Tu última nota${lastNote?' · '+formatDate(lastNote.created_at.slice(0,10)):''}</div>
-        <div style="font-size:13px;margin-top:4px">${lastNote?lastNote.note:'Aún no le has dejado ninguna nota.'}</div>
+        <div style="font-size:11px;font-weight:700;color:${lastNote&&lastNote.sender==='client'?'#8A6D00':'#8B8896'};text-transform:uppercase">${lastNote?(lastNote.sender==='client'?'💬 Mensaje de '+((client.name||'').split(' ')[0]||'la clienta'):'Tu última nota')+' · '+formatDate(lastNote.created_at.slice(0,10)):'Mensajes'}</div>
+        <div style="font-size:13px;margin-top:4px">${lastNote?lastNote.note:'Aún no hay mensajes con esta clienta.'}</div>
       </div>
-      <button class="btn-sm primary" onclick="adminDetailSetTab('mensajes')">Dejar nota nueva</button>
+      <button class="btn-sm primary" onclick="adminDetailSetTab('mensajes')">${lastNote&&lastNote.sender==='client'?'Responder':'Dejar nota nueva'}</button>
     </div>
   `;
 }
@@ -2586,14 +2759,23 @@ function adminGoToEjercicio(clientId){
 async function adminRenderMensajes(client,body){
   const notes=await SB.get('client_notes',`profile_id=eq.${client.id}&order=created_at.desc&limit=30`);
   const firstName=(client.name||'').split(' ')[0]||'la clienta';
-  const list=(notes||[]).map(n=>`
-    <div style="padding:12px 14px;border-bottom:1px solid #F1EFF7">
+  // Ahora client_notes trae mensajes en las dos direcciones (columna
+  // "sender": 'coach' o 'client') — se distinguen con una etiqueta y un
+  // fondo distinto, en vez de la pill de "Visible/Nota privada" que solo
+  // tenía sentido para tus propios mensajes.
+  const list=(notes||[]).map(n=>{
+    const fromClient=n.sender==='client';
+    const tagHtml=fromClient
+      ?`<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:#EAE8FB;color:#3A2FA0">De ${firstName}</span>`
+      :`<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:${n.visible_to_client?'#E6FAF3':'#F1EFF7'};color:${n.visible_to_client?'#0E9E7D':'#8B8896'}">${n.visible_to_client?'Visible para '+firstName:'Nota privada'}</span>`;
+    return`<div style="padding:12px 14px;border-bottom:1px solid #F1EFF7;${fromClient?'background:#FBFAFF':''}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;flex-wrap:wrap">
         <span style="font-size:11px;font-weight:700;color:#8B8896">${formatDate(n.created_at.slice(0,10))}</span>
-        <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:${n.visible_to_client?'#E6FAF3':'#F1EFF7'};color:${n.visible_to_client?'#0E9E7D':'#8B8896'}">${n.visible_to_client?'Visible para '+firstName:'Nota privada'}</span>
+        ${tagHtml}
       </div>
       <div style="font-size:13px;line-height:1.5">${n.note}</div>
-    </div>`).join('')||'<div class="empty-state">Aún no hay mensajes.</div>';
+    </div>`;
+  }).join('')||'<div class="empty-state">Aún no hay mensajes.</div>';
   body.innerHTML=`
     <div class="dash-section" style="padding:0;overflow:hidden;margin-bottom:14px">${list}</div>
     <div class="dash-section">
@@ -2612,7 +2794,7 @@ async function adminSendNote(clientId){
   const note=input.value.trim();
   if(!note)return;
   const visible=document.getElementById('admin-note-visible').checked;
-  const result=await SB.post('client_notes',{profile_id:clientId,note,visible_to_client:visible});
+  const result=await SB.post('client_notes',{profile_id:clientId,note,sender:'coach',visible_to_client:visible});
   if(!result){alert('No se pudo guardar el mensaje. Verifica tu conexión e intenta de nuevo.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:''));return;}
   input.value='';
   adminRenderDetailShell();
