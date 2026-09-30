@@ -2509,23 +2509,50 @@ function adminRenderGoalRow(clientId,field,history,goalValue){
 
 // Solo lectura — a diferencia del historial de la propia clienta, acá la
 // coach no puede borrar días. Reusa las mismas clases visuales (.hist-*).
+// withinTgt: mismo margen que dayMet() (-15% / +10%) para que "en meta"
+// signifique lo mismo aquí que en el resto de la app (Hoy, Resumen, reporte
+// exportable) — así la coach no ve dos criterios distintos de "en meta".
+function withinTgt(val,t){if(!t)return false;return val>=t*0.85&&val<=t*1.10;}
+
+// Pill de un macro con su meta y el gap (consumido - meta) al lado, en rojo
+// cuando se sale del margen — esto es lo que le faltaba a la coach: antes
+// solo veía lo consumido, sin poder comparar contra lo planeado de un
+// vistazo por día.
+function adminGapPill(cls,val,t,unit){
+  val=val||0;t=t||0;
+  const gap=Math.round(val-t);
+  const ok=withinTgt(val,t);
+  const gapTxt=t?` <span style="opacity:.8">(${gap>0?'+':''}${gap}${unit})</span>`:'';
+  return `<span class="pill ${cls}"${ok?'':' style="background:#FFE1DD;color:#B8271A"'}">${Math.round(val)}${t?'/'+Math.round(t):''}${unit}${gapTxt}</span>`;
+}
+
 async function adminRenderNutricionDetail(client,body){
   const rows=await SB.get('diary',`profile_id=eq.${client.id}&order=date.desc&limit=14`);
-  if(!rows||!rows.length){body.innerHTML='<div class="empty-state">Sin registros aún.</div>';return;}
-  body.innerHTML=rows.map((rec,i)=>{
+  const tgt=client.targets||{cal:1500,prot:120,carb:150,fat:50};
+  const metaHtml=`<div class="dash-section" style="margin-bottom:12px">
+    <div class="dash-section-title">Meta diaria de ${(client.name||'').split(' ')[0]||'la clienta'}</div>
+    <div class="hist-pills" style="margin-top:6px">
+      <span class="pill p-cal">${tgt.cal} kcal</span>
+      <span class="pill p-prot">${tgt.prot}g P</span>
+      <span class="pill p-carb">${tgt.carb}g C</span>
+      <span class="pill p-fat">${tgt.fat}g G</span>
+    </div>
+  </div>`;
+  if(!rows||!rows.length){body.innerHTML=metaHtml+'<div class="empty-state">Sin registros aún.</div>';return;}
+  body.innerHTML=metaHtml+rows.map((rec,i)=>{
+    const t=rec.totals||{cal:0,prot:0,carb:0,fat:0};
+    const met=['cal','prot','carb','fat'].every(k=>withinTgt(t[k]||0,tgt[k]||0));
     const bodyId='admin-hb-'+i;
     return`<div class="hist-card">
       <div class="hist-header" onclick="toggleHist('${bodyId}')">
-        <span class="hist-date">${formatDate(rec.date)}</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="hist-pills">
-            <span class="pill p-cal">${Math.round(rec.totals.cal)} kcal</span>
-            <span class="pill p-prot">${Math.round(rec.totals.prot)}g P</span>
-            <span class="pill p-carb">${Math.round(rec.totals.carb)}g C</span>
-            <span class="pill p-fat">${Math.round(rec.totals.fat)}g G</span>
-          </div>
-          <span class="chevron" id="chev-${bodyId}">&#8964;</span>
-        </div>
+        <span class="hist-date">${formatDate(rec.date)} <span style="font-size:11px;font-weight:700;color:${met?'#17C39B':'#DC3B3B'}">${met?'✓ en meta':'✗ fuera de meta'}</span></span>
+        <span class="chevron" id="chev-${bodyId}">&#8964;</span>
+      </div>
+      <div class="hist-pills" style="margin-top:8px">
+        ${adminGapPill('p-cal',t.cal,tgt.cal,' kcal')}
+        ${adminGapPill('p-prot',t.prot,tgt.prot,'g P')}
+        ${adminGapPill('p-carb',t.carb,tgt.carb,'g C')}
+        ${adminGapPill('p-fat',t.fat,tgt.fat,'g G')}
       </div>
       <div class="hist-body" id="${bodyId}">
         ${MEALS.map(meal=>{
