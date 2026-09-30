@@ -686,9 +686,14 @@ canvas{display:block;width:100%;max-width:100%}
 
   <!-- HOY -->
   <div id="tab-hoy">
-    <div id="coach-note-banner"></div>
     <div id="dash-container"><div class="empty-state">Cargando...</div></div>
     <div id="goal-widgets-section"></div>
+    <div class="backup-section" id="chat-general-section">
+      <div class="backup-title">💬 Mensajes — General</div>
+      <div id="chat-general-thread" style="max-height:220px;overflow-y:auto;border:0.5px solid #E7E5EF;border-radius:10px;margin-bottom:10px"></div>
+      <textarea id="chat-general-input" rows="2" placeholder="Escríbele a tu coach..." style="margin-bottom:8px"></textarea>
+      <button class="btn-sm primary" onclick="clientSendChat('general')">Enviar</button>
+    </div>
   </div>
 
   <!-- NUTRICION -->
@@ -756,6 +761,13 @@ canvas{display:block;width:100%;max-width:100%}
     <div id="nutri-view-historial" style="display:none">
       <div id="hist-container"><div class="empty-state">Sin registros aún.</div></div>
     </div>
+
+    <div class="backup-section" id="chat-nutricion-section">
+      <div class="backup-title">💬 Mensajes — Nutrición</div>
+      <div id="chat-nutricion-thread" style="max-height:220px;overflow-y:auto;border:0.5px solid #E7E5EF;border-radius:10px;margin-bottom:10px"></div>
+      <textarea id="chat-nutricion-input" rows="2" placeholder="Escríbele a tu coach sobre tu nutrición..." style="margin-bottom:8px"></textarea>
+      <button class="btn-sm primary" onclick="clientSendChat('nutricion')">Enviar</button>
+    </div>
   </div>
 
   <!-- CUERPO -->
@@ -800,6 +812,13 @@ canvas{display:block;width:100%;max-width:100%}
       </div>
       <div id="medida-history"></div>
       <a href="#" onclick="event.preventDefault();showTab('tendencias')" style="display:block;text-align:center;font-size:11.5px;font-weight:700;color:#5B4FE9;text-decoration:none;padding-top:10px">Ver todas las tendencias →</a>
+    </div>
+
+    <div class="backup-section" id="chat-cuerpo-section">
+      <div class="backup-title">💬 Mensajes — Medidas</div>
+      <div id="chat-cuerpo-thread" style="max-height:220px;overflow-y:auto;border:0.5px solid #E7E5EF;border-radius:10px;margin-bottom:10px"></div>
+      <textarea id="chat-cuerpo-input" rows="2" placeholder="Escríbele a tu coach sobre tus medidas..." style="margin-bottom:8px"></textarea>
+      <button class="btn-sm primary" onclick="clientSendChat('cuerpo')">Enviar</button>
     </div>
   </div>
 
@@ -858,11 +877,24 @@ canvas{display:block;width:100%;max-width:100%}
         <div id="bienestar-history"></div>
       </div>
     </div>
+
+    <div class="backup-section" id="chat-bienestar-section">
+      <div class="backup-title">💬 Mensajes — Bienestar</div>
+      <div id="chat-bienestar-thread" style="max-height:220px;overflow-y:auto;border:0.5px solid #E7E5EF;border-radius:10px;margin-bottom:10px"></div>
+      <textarea id="chat-bienestar-input" rows="2" placeholder="Escríbele a tu coach sobre cómo te sientes..." style="margin-bottom:8px"></textarea>
+      <button class="btn-sm primary" onclick="clientSendChat('bienestar')">Enviar</button>
+    </div>
   </div>
 
   <!-- EJERCICIO -->
   <div id="tab-ejercicio" style="display:none">
     <div id="ejercicio-container"><div class="empty-state">Cargando...</div></div>
+    <div class="backup-section" id="chat-ejercicio-section">
+      <div class="backup-title">💬 Mensajes — Ejercicio</div>
+      <div id="chat-ejercicio-thread" style="max-height:220px;overflow-y:auto;border:0.5px solid #E7E5EF;border-radius:10px;margin-bottom:10px"></div>
+      <textarea id="chat-ejercicio-input" rows="2" placeholder="Escríbele a tu coach sobre tu entreno..." style="margin-bottom:8px"></textarea>
+      <button class="btn-sm primary" onclick="clientSendChat('ejercicio')">Enviar</button>
+    </div>
   </div>
 
   <!-- TENDENCIAS -->
@@ -876,12 +908,6 @@ canvas{display:block;width:100%;max-width:100%}
       <div class="backup-title">Tu link personal</div>
       <div style="font-size:12px;color:#8B8896;margin-bottom:10px">Guárdalo — al abrirlo entras directo a tu pantalla de PIN, sin pasar por la lista de perfiles.</div>
       <button class="btn-sm primary" onclick="copyMyLink()">📋 Copiar mi link</button>
-    </div>
-    <div class="backup-section" id="ajustes-mensajes-section">
-      <div class="backup-title">Mensajes con tu coach</div>
-      <div id="client-msg-thread" style="max-height:260px;overflow-y:auto;border:0.5px solid #E7E5EF;border-radius:10px;margin-bottom:10px"></div>
-      <textarea id="client-msg-input" rows="2" placeholder="Escríbele a tu coach..." style="margin-bottom:8px"></textarea>
-      <button class="btn-sm primary" onclick="clientSendNote()">Enviar</button>
     </div>
     <div class="backup-section" id="my-plan-section" style="display:none"></div>
     <div class="backup-section">
@@ -1622,7 +1648,7 @@ function enterApp(profile){
   // selector de fecha no servía para nada. Ahora sí recarga.
   di.onchange=()=>loadDay(di.value);
   loadFoodCatalog();
-  buildMeals();loadDay(today());renderInBodyDatos();renderDashboard();renderCoachNoteBanner();renderGoalWidgetsSection();
+  buildMeals();loadDay(today());renderInBodyDatos();renderDashboard();renderGoalWidgetsSection();renderClientChat('general');
   initMoodButtons();
 }
 
@@ -1677,47 +1703,66 @@ function renderAjustes(){
   // de la coach, no algo que un cliente deba tocar — solo el reporte
   // semanal (descarga de solo lectura) queda disponible para todas.
   document.getElementById('ajustes-admin-backup-section').style.display=PROFILE.is_admin?'':'none';
-  // El hilo de mensajes con la coach es solo para clientas — la coach no
-  // tiene "una coach" a la que escribirle desde su propio Ajustes.
-  const msgSection=document.getElementById('ajustes-mensajes-section');
-  if(msgSection){
-    msgSection.style.display=PROFILE.is_admin?'none':'';
-    if(!PROFILE.is_admin)renderClientMsgThread();
-  }
 }
 
-// ── MENSAJES: hilo completo de ida y vuelta (vista de la clienta) ──────
-// Antes la clienta solo veía la última nota de la coach en un banner de
-// "Hoy" (ver renderCoachNoteBanner) y no podía responder. Ahora, desde
-// Ajustes, ve el hilo completo (sus mensajes y los de la coach) y puede
-// escribir uno nuevo — mismo patrón que adminRenderMensajes, del otro lado.
-async function renderClientMsgThread(){
-  const el=document.getElementById('client-msg-thread');
-  if(!el||!PROFILE)return;
-  el.innerHTML='<div class="empty-state" style="padding:14px">Cargando...</div>';
-  const notes=await SB.get('client_notes',`profile_id=eq.${PROFILE.id}&order=created_at.asc&limit=50`);
+// ── MENSAJES POR PESTAÑA ─────────────────────────────────────
+// Antes había un solo hilo de mensajes (en Ajustes, del lado de la
+// clienta, y en una sub-pestaña "Mensajes" del lado de la coach). Ahora
+// cada área — General (Hoy), Nutrición, Medidas, Ejercicio, Bienestar —
+// tiene su PROPIO hilo independiente, para que cada mensaje quede pegado
+// a lo que la clienta estaba viendo cuando lo escribió. client_notes ya
+// traía "sender" (coach/client); ahora también trae "category".
+// renderChatThread es genérica: la usa tanto el lado de la clienta
+// (isAdmin=false) como el panel de la coach (isAdmin=true, que además ve
+// las notas marcadas como privadas).
+const CHAT_CATEGORIES={
+  general:{icon:'💬',label:'General',adminTab:'resumen'},
+  nutricion:{icon:'🍽',label:'Nutrición',adminTab:'nutricion'},
+  cuerpo:{icon:'📏',label:'Medidas',adminTab:'tendencias'},
+  ejercicio:{icon:'🏋',label:'Ejercicio',adminTab:'ejercicio'},
+  bienestar:{icon:'🙂',label:'Bienestar',adminTab:'bienestar'}
+};
+
+async function renderChatThread(profileId,category,threadEl,isAdmin,firstName){
+  if(!threadEl)return;
+  threadEl.innerHTML='<div class="empty-state" style="padding:10px">Cargando...</div>';
+  const notes=await SB.get('client_notes',`profile_id=eq.${profileId}&category=eq.${category}&order=created_at.asc&limit=50`);
   // Las notas privadas de la coach (visible_to_client=false) nunca se
-  // muestran acá — siguen siendo solo para ella, igual que en el banner.
-  const thread=(notes||[]).filter(n=>n.sender==='client'||n.visible_to_client);
-  if(!thread.length){el.innerHTML='<div class="empty-state" style="padding:14px">Aún no hay mensajes — escríbele a tu coach abajo.</div>';return;}
-  el.innerHTML=thread.map(n=>{
-    const mine=n.sender==='client';
-    return`<div style="padding:10px 12px;border-bottom:1px solid #F1EFF7;${mine?'background:#F8F7FD':''}">
-      <div style="font-size:10px;font-weight:700;color:#8B8896;margin-bottom:3px">${mine?'Tú':'Tu coach'} · ${formatDate(n.created_at.slice(0,10))}</div>
+  // muestran del lado de la clienta — siguen siendo solo para ella.
+  const rows=isAdmin?(notes||[]):(notes||[]).filter(n=>n.sender==='client'||n.visible_to_client);
+  if(!rows.length){threadEl.innerHTML='<div class="empty-state" style="padding:10px">Aún no hay mensajes aquí.</div>';return;}
+  threadEl.innerHTML=rows.map(n=>{
+    const fromClient=n.sender==='client';
+    const who=isAdmin?(fromClient?'De '+(firstName||'la clienta'):'Tú'):(fromClient?'Tú':'Tu coach');
+    const privTag=isAdmin&&!fromClient&&!n.visible_to_client?' <span style="color:#ADAAB8">(privada)</span>':'';
+    return`<div style="padding:8px 10px;border-bottom:1px solid #F1EFF7;${fromClient&&isAdmin?'background:#FBFAFF':''}">
+      <div style="font-size:10px;font-weight:700;color:#8B8896;margin-bottom:2px">${who}${privTag} · ${formatDate(n.created_at.slice(0,10))}</div>
       <div style="font-size:13px;line-height:1.4">${n.note}</div>
     </div>`;
   }).join('');
-  el.scrollTop=el.scrollHeight;
+  threadEl.scrollTop=threadEl.scrollHeight;
 }
 
-async function clientSendNote(){
-  const input=document.getElementById('client-msg-input');
+// Del lado de la clienta, el chat de cada pestaña se oculta si el perfil
+// activo es el de la coach (su propio perfil de seguimiento personal) —
+// no tiene sentido que se escriba mensajes a sí misma.
+function renderClientChat(category){
+  const section=document.getElementById('chat-'+category+'-section');
+  if(!section)return;
+  if(!PROFILE||PROFILE.is_admin){section.style.display='none';return;}
+  section.style.display='';
+  renderChatThread(PROFILE.id,category,document.getElementById('chat-'+category+'-thread'),false);
+}
+
+async function clientSendChat(category){
+  const input=document.getElementById('chat-'+category+'-input');
+  if(!input||!PROFILE)return;
   const note=input.value.trim();
-  if(!note||!PROFILE)return;
-  const result=await SB.post('client_notes',{profile_id:PROFILE.id,note,sender:'client',visible_to_client:true});
+  if(!note)return;
+  const result=await SB.post('client_notes',{profile_id:PROFILE.id,note,sender:'client',visible_to_client:true,category});
   if(!result){alert('No se pudo enviar el mensaje. Verifica tu conexión e intenta de nuevo.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:''));return;}
   input.value='';
-  renderClientMsgThread();
+  renderChatThread(PROFILE.id,category,document.getElementById('chat-'+category+'-thread'),false);
 }
 
 async function saveMiPerfil(){
@@ -1847,12 +1892,12 @@ function showTab(t){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.getElementById('gear-btn')?.classList.toggle('active',t==='ajustes');
   updateHeaderTitle(t);
-  if(t==='hoy'){renderDashboard();renderCoachNoteBanner();renderGoalWidgetsSection();}
-  if(t==='nutricion') nutriSetView(nutriSubView);
-  if(t==='cuerpo'){renderProgreso();renderInBodyDatos();setIbMode('manual');}
+  if(t==='hoy'){renderDashboard();renderGoalWidgetsSection();renderClientChat('general');}
+  if(t==='nutricion'){nutriSetView(nutriSubView);renderClientChat('nutricion');}
+  if(t==='cuerpo'){renderProgreso();renderInBodyDatos();setIbMode('manual');renderClientChat('cuerpo');}
   if(t==='tendencias') renderTendencias();
-  if(t==='bienestar') renderBienestar();
-  if(t==='ejercicio') renderEjercicio();
+  if(t==='bienestar'){renderBienestar();renderClientChat('bienestar');}
+  if(t==='ejercicio'){renderEjercicio();renderClientChat('ejercicio');}
   if(t==='admin') renderAdminDashboard();
   if(t==='ajustes'){renderAjustes();renderMyPlanCard();}
 }
@@ -1968,9 +2013,11 @@ const ADMIN_NOTIF_TYPES={
   nutricion:{icon:'🍽',label:'Registró su comida',tab:'nutricion'},
   inbody:{icon:'📊',label:'Registró un InBody',tab:'resumen'},
   medidas:{icon:'📏',label:'Registró medidas corporales',tab:'tendencias'},
-  bienestar:{icon:'🙂',label:'Registró bienestar del día',tab:'resumen'},
+  bienestar:{icon:'🙂',label:'Registró bienestar del día',tab:'bienestar'},
   ejercicio:{icon:'🏋',label:'Registró un entreno',tab:'ejercicio'},
-  mensaje:{icon:'💬',label:'Te escribió un mensaje',tab:'mensajes'}
+  // "mensaje" no tiene una sola pestaña fija — cada uno salta a la
+  // sub-pestaña de SU categoría (ver destTab en showAdminNotifPanel).
+  mensaje:{icon:'💬',label:'Te escribió un mensaje'}
 };
 
 function timeAgo(iso){
@@ -1999,7 +2046,7 @@ async function adminFetchRecentActivity(sinceISO){
   (ibRows||[]).forEach(r=>items.push({type:'inbody',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.saved_at,detail:formatDate(r.date)}));
   (medRows||[]).forEach(r=>items.push({type:'medidas',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.created_at,detail:formatDate(r.date)}));
   (bwRows||[]).forEach(r=>items.push({type:'bienestar',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.saved_at,detail:formatDate(r.date)}));
-  (msgRows||[]).forEach(r=>items.push({type:'mensaje',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.created_at,detail:(r.note||'').slice(0,60)}));
+  (msgRows||[]).forEach(r=>items.push({type:'mensaje',clientId:r.profile_id,clientName:nameOf(r.profile_id),ts:r.created_at,detail:(r.note||'').slice(0,60),category:r.category||'general'}));
   // Un entreno guarda una fila por cada serie — se agrupa por clienta+fecha
   // para no mostrar (ni contar) diez notificaciones por una sola sesión.
   const exByKey={};
@@ -2042,12 +2089,17 @@ async function showAdminNotifPanel(){
   const items=await adminFetchRecentActivity(windowStart);
   list.innerHTML=items.length?items.map(it=>{
     const cfg=ADMIN_NOTIF_TYPES[it.type]||{icon:'•',label:'Actividad',tab:'resumen'};
+    // Un mensaje salta directo a la sub-pestaña de SU categoría (Nutrición,
+    // Medidas, Bienestar, Ejercicio, o Resumen para los generales) — ya no
+    // existe una sub-pestaña "Mensajes" separada.
+    const destTab=it.type==='mensaje'?(CHAT_CATEGORIES[it.category]?.adminTab||'resumen'):cfg.tab;
+    const label=it.type==='mensaje'?`${cfg.label} — ${CHAT_CATEGORIES[it.category]?.label||'General'}`:cfg.label;
     const isNew=it.ts>since;
-    return`<div onclick="adminNotifGoTo('${it.clientId}','${cfg.tab}')" style="display:flex;gap:10px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid #F1EFF7;cursor:pointer;${isNew?'background:#F8F7FD':''}">
+    return`<div onclick="adminNotifGoTo('${it.clientId}','${destTab}')" style="display:flex;gap:10px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid #F1EFF7;cursor:pointer;${isNew?'background:#F8F7FD':''}">
       <span style="font-size:18px;flex-shrink:0">${cfg.icon}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600">${it.clientName}${isNew?' <span style="color:#5B4FE9;font-size:10px;font-weight:700">· nuevo</span>':''}</div>
-        <div style="font-size:12px;color:#6B6878">${cfg.label}${it.detail?' · '+it.detail:''}</div>
+        <div style="font-size:12px;color:#6B6878">${label}${it.detail?' · '+it.detail:''}</div>
       </div>
       <span style="font-size:10px;color:#ADAAB8;white-space:nowrap;flex-shrink:0">${timeAgo(it.ts)}</span>
     </div>`;
@@ -2217,7 +2269,7 @@ async function adminRenderDetailShell(){
   const client=ALL_PROFILES.find(p=>p.id===adminDetail.clientId);
   const root=document.getElementById('admin-detail-view');
   if(!client){root.innerHTML='<div class="empty-state">Esta clienta ya no existe.</div>';return;}
-  const tabs=[['resumen','Resumen'],['plan','Plan'],['tendencias','Tendencias'],['nutricion','Nutrición'],['ejercicio','Ejercicio'],['mensajes','Mensajes']];
+  const tabs=[['resumen','Resumen'],['plan','Plan'],['tendencias','Tendencias'],['nutricion','Nutrición'],['bienestar','Bienestar'],['ejercicio','Ejercicio']];
   root.innerHTML=`
     <a href="#" onclick="adminBackToList();return false" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#8B8896;margin-bottom:14px;text-decoration:none">← Volver a clientes</a>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
@@ -2237,16 +2289,52 @@ async function adminRenderDetailShell(){
   else if(adminDetail.subTab==='plan')await adminRenderPlan(client,body);
   else if(adminDetail.subTab==='tendencias')await adminRenderTendencias(client,body);
   else if(adminDetail.subTab==='nutricion')await adminRenderNutricionDetail(client,body);
-  else if(adminDetail.subTab==='ejercicio')adminRenderEjercicioLink(client,body);
-  else if(adminDetail.subTab==='mensajes')await adminRenderMensajes(client,body);
+  else if(adminDetail.subTab==='bienestar')await adminRenderBienestarDetail(client,body);
+  else if(adminDetail.subTab==='ejercicio')await adminRenderEjercicioLink(client,body);
+}
+
+// ── MENSAJES POR PESTAÑA (vista de la coach) ────────────────────
+// El mismo chat por categoría que ve la clienta, pero embebido al final
+// de la sub-pestaña correspondiente del panel de la coach (Resumen →
+// general, Nutrición → nutricion, Tendencias → cuerpo, Bienestar →
+// bienestar, Ejercicio → ejercicio) en vez de una sub-pestaña "Mensajes"
+// aparte — así el mensaje queda junto a los datos de esa clienta que la
+// coach está viendo en ese momento.
+function adminChatWidgetHtml(category){
+  const cfg=CHAT_CATEGORIES[category];
+  return `<div class="dash-section" style="margin-top:14px">
+    <div class="dash-section-title">${cfg.icon} Mensajes — ${cfg.label}</div>
+    <div id="admin-chat-${category}-thread" style="max-height:220px;overflow-y:auto;margin:8px 0"></div>
+    <textarea id="admin-chat-${category}-input" rows="2" placeholder="Escribe aquí..." style="margin-bottom:8px"></textarea>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer"><input type="checkbox" id="admin-chat-${category}-visible" checked style="width:16px;height:16px">Visible para la clienta</label>
+      <button class="btn-sm primary" onclick="adminSendChat('${category}')">Enviar</button>
+    </div>
+  </div>`;
+}
+async function adminRenderChatWidget(clientId,category,firstName){
+  const el=document.getElementById('admin-chat-'+category+'-thread');
+  await renderChatThread(clientId,category,el,true,firstName);
+}
+async function adminSendChat(category){
+  const clientId=adminDetail.clientId;
+  const input=document.getElementById('admin-chat-'+category+'-input');
+  if(!input)return;
+  const note=input.value.trim();
+  if(!note)return;
+  const visible=document.getElementById('admin-chat-'+category+'-visible').checked;
+  const result=await SB.post('client_notes',{profile_id:clientId,note,sender:'coach',visible_to_client:visible,category});
+  if(!result){alert('No se pudo guardar el mensaje. Verifica tu conexión e intenta de nuevo.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:''));return;}
+  input.value='';
+  const client=ALL_PROFILES.find(p=>p.id===clientId);
+  await adminRenderChatWidget(clientId,category,(client?.name||'').split(' ')[0]);
 }
 
 async function adminRenderResumen(client,body){
   const todayStr=today();const dates7=getLast7();const from=dates7[0];
-  const [records7,ibRows,lastNoteRows,protocolRows]=await Promise.all([
+  const [records7,ibRows,protocolRows]=await Promise.all([
     SB.get('diary',`profile_id=eq.${client.id}&date=gte.${from}&order=date.asc`),
     SB.get('inbody',`profile_id=eq.${client.id}&order=date.desc&limit=1`),
-    SB.get('client_notes',`profile_id=eq.${client.id}&order=created_at.desc&limit=1`),
     SB.get('client_protocols',`profile_id=eq.${client.id}&limit=1`)
   ]);
   const wk=planWeekInfo(protocolRows&&protocolRows[0]);
@@ -2257,7 +2345,6 @@ async function adminRenderResumen(client,body){
   const avgCal=registered?Math.round(recs.reduce((s,r)=>s+(r.totals?.cal||0),0)/registered):0;
   const balance=Math.round(recs.reduce((s,r)=>s+((r.totals?.cal||0)-tgt.cal),0));
   const ib=ibRows&&ibRows[0];
-  const lastNote=lastNoteRows&&lastNoteRows[0];
   const protocol=protocolRows&&protocolRows[0];
   const g=await computeGoalWidgets(client.id,client.weight_goal,protocol,tgt.cal);
   // Respuestas del formulario de bienvenida (solo si entró por el link de
@@ -2299,14 +2386,9 @@ async function adminRenderResumen(client,body){
         <div style="background:#F4F3F7;border-radius:8px;padding:8px;text-align:center"><div style="font-size:15px;font-weight:600">${ib.mme||'—'} kg</div><div style="font-size:10px;color:#ADAAB8">MME</div></div>
       </div>
     </div>`:'<div class="empty-state" style="margin-bottom:14px">Sin datos InBody aún</div>'}
-    <div class="dash-section" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap${lastNote&&lastNote.sender==='client'?';background:#FFF8E8;border-color:#F0DFA8':''}">
-      <div>
-        <div style="font-size:11px;font-weight:700;color:${lastNote&&lastNote.sender==='client'?'#8A6D00':'#8B8896'};text-transform:uppercase">${lastNote?(lastNote.sender==='client'?'💬 Mensaje de '+((client.name||'').split(' ')[0]||'la clienta'):'Tu última nota')+' · '+formatDate(lastNote.created_at.slice(0,10)):'Mensajes'}</div>
-        <div style="font-size:13px;margin-top:4px">${lastNote?lastNote.note:'Aún no hay mensajes con esta clienta.'}</div>
-      </div>
-      <button class="btn-sm primary" onclick="adminDetailSetTab('mensajes')">${lastNote&&lastNote.sender==='client'?'Responder':'Dejar nota nueva'}</button>
-    </div>
+    ${adminChatWidgetHtml('general')}
   `;
+  await adminRenderChatWidget(client.id,'general',(client.name||'').split(' ')[0]);
 }
 
 // Cuántas semanas de plan van y cuántas faltan, a partir de fecha_inicio /
@@ -2608,9 +2690,11 @@ async function adminRenderTendencias(client,body){
     <div class="chart-tabs" id="admin-trend-tabs" style="margin-bottom:10px;flex-wrap:wrap"></div>
     <div class="chart-wrap"><canvas id="admin-trend-canvas" height="220"></canvas></div>
     <div id="admin-goal-row" style="margin-top:10px"></div>
+    ${adminChatWidgetHtml('cuerpo')}
   `;
   document.getElementById('admin-trend-tabs').innerHTML=TREND_FIELDS.map(f=>`<button class="chart-tab${f.key===adminDetail.trendField?' active':''}" onclick="adminSetTrendField('${f.key}')">${f.label.split(' ')[0]}</button>`).join('');
   await adminDrawTrend(client);
+  await adminRenderChatWidget(client.id,'cuerpo',(client.name||'').split(' ')[0]);
 }
 function adminSetTrendField(key){adminDetail.trendField=key;adminRenderDetailShell();}
 async function adminDrawTrend(client){
@@ -2711,7 +2795,12 @@ async function adminRenderNutricionDetail(client,body){
       <span class="pill p-fat">${tgt.fat}g G</span>
     </div>
   </div>`;
-  if(!rows||!rows.length){body.innerHTML=metaHtml+'<div class="empty-state">Sin registros aún.</div>';return;}
+  const firstName=(client.name||'').split(' ')[0]||'la clienta';
+  if(!rows||!rows.length){
+    body.innerHTML=metaHtml+'<div class="empty-state">Sin registros aún.</div>'+adminChatWidgetHtml('nutricion');
+    await adminRenderChatWidget(client.id,'nutricion',firstName);
+    return;
+  }
   body.innerHTML=metaHtml+rows.map((rec,i)=>{
     const t=rec.totals||{cal:0,prot:0,carb:0,fat:0};
     const met=['cal','prot','carb','fat'].every(k=>withinTgt(t[k]||0,tgt[k]||0));
@@ -2739,85 +2828,44 @@ async function adminRenderNutricionDetail(client,body){
         }).join('')}
       </div>
     </div>`;
-  }).join('');
+  }).join('')+adminChatWidgetHtml('nutricion');
+  await adminRenderChatWidget(client.id,'nutricion',firstName);
 }
 
 // No duplica el asignador de rutinas — el que ya existe en la pestaña
 // Ejercicio (con balance semanal de volumen e historial) ya soporta elegir
 // clienta. Este botón solo salta ahí con esta clienta ya seleccionada.
-function adminRenderEjercicioLink(client,body){
+async function adminRenderEjercicioLink(client,body){
+  const firstName=(client.name||'').split(' ')[0]||'la clienta';
   body.innerHTML=`<div class="dash-section" style="text-align:center;padding:28px 20px">
     <div style="font-size:13px;color:#4B4855;margin-bottom:14px;max-width:420px;margin-left:auto;margin-right:auto">Asigna rutinas, revisa el balance semanal y el historial de entrenos de ${client.name} desde la pestaña Ejercicio.</div>
     <button class="btn-sm primary" onclick="adminGoToEjercicio('${client.id}')">Ir a Ejercicio →</button>
-  </div>`;
+  </div>${adminChatWidgetHtml('ejercicio')}`;
+  await adminRenderChatWidget(client.id,'ejercicio',firstName);
 }
 function adminGoToEjercicio(clientId){
   showTab('ejercicio');
   exSelectClient(clientId);
 }
 
-async function adminRenderMensajes(client,body){
-  const notes=await SB.get('client_notes',`profile_id=eq.${client.id}&order=created_at.desc&limit=30`);
+// ── ADMIN: BIENESTAR (mismo registro de ánimo/hábitos/notas que ve la
+// clienta, en modo solo-lectura, más el chat de esta categoría) ──────
+async function adminRenderBienestarDetail(client,body){
   const firstName=(client.name||'').split(' ')[0]||'la clienta';
-  // Ahora client_notes trae mensajes en las dos direcciones (columna
-  // "sender": 'coach' o 'client') — se distinguen con una etiqueta y un
-  // fondo distinto, en vez de la pill de "Visible/Nota privada" que solo
-  // tenía sentido para tus propios mensajes.
-  const list=(notes||[]).map(n=>{
-    const fromClient=n.sender==='client';
-    const tagHtml=fromClient
-      ?`<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:#EAE8FB;color:#3A2FA0">De ${firstName}</span>`
-      :`<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:${n.visible_to_client?'#E6FAF3':'#F1EFF7'};color:${n.visible_to_client?'#0E9E7D':'#8B8896'}">${n.visible_to_client?'Visible para '+firstName:'Nota privada'}</span>`;
-    return`<div style="padding:12px 14px;border-bottom:1px solid #F1EFF7;${fromClient?'background:#FBFAFF':''}">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:8px;flex-wrap:wrap">
-        <span style="font-size:11px;font-weight:700;color:#8B8896">${formatDate(n.created_at.slice(0,10))}</span>
-        ${tagHtml}
+  const rows=await SB.get('bienestar',`profile_id=eq.${client.id}&order=date.desc&limit=14`);
+  const moodEmoji=['','😞','😕','😐','🙂','😄'];
+  const listHtml=(rows&&rows.length)?rows.map(r=>{
+    const done=Object.entries(r.habits||{}).filter(([,v])=>v).map(([k])=>k);
+    return`<div class="hist-card">
+      <div class="hist-header" style="cursor:default">
+        <span class="hist-date">${formatDate(r.date)} <span style="font-size:15px">${moodEmoji[r.mood]||'—'}</span></span>
       </div>
-      <div style="font-size:13px;line-height:1.5">${n.note}</div>
+      ${done.length?`<div class="hist-pills" style="margin-top:6px">${done.map(h=>`<span class="pill" style="background:#F1EFF7;color:#4B4855">${h}</span>`).join('')}</div>`:''}
+      ${r.note?`<div style="font-size:13px;margin-top:8px;color:#4B4855">"${r.note}"</div>`:''}
     </div>`;
-  }).join('')||'<div class="empty-state">Aún no hay mensajes.</div>';
-  body.innerHTML=`
-    <div class="dash-section" style="padding:0;overflow:hidden;margin-bottom:14px">${list}</div>
-    <div class="dash-section">
-      <label style="font-size:11px;font-weight:700;color:#8B8896;display:block;margin-bottom:6px">Nuevo mensaje o sugerencia para ${firstName}</label>
-      <textarea id="admin-note-input" rows="3" placeholder="Escribe aquí..." style="margin-bottom:10px"></textarea>
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer"><input type="checkbox" id="admin-note-visible" checked style="width:16px;height:16px">Visible para ${firstName}</label>
-        <button class="btn-sm primary" onclick="adminSendNote('${client.id}')">Enviar</button>
-      </div>
-    </div>
-  `;
-}
-
-async function adminSendNote(clientId){
-  const input=document.getElementById('admin-note-input');
-  const note=input.value.trim();
-  if(!note)return;
-  const visible=document.getElementById('admin-note-visible').checked;
-  const result=await SB.post('client_notes',{profile_id:clientId,note,sender:'coach',visible_to_client:visible});
-  if(!result){alert('No se pudo guardar el mensaje. Verifica tu conexión e intenta de nuevo.'+(SB.lastError?'\n\nDetalle técnico: '+SB.lastError:''));return;}
-  input.value='';
-  adminRenderDetailShell();
-}
-
-// ── MENSAJES DE LA COACH (vista de la clienta) ──────────────────
-// Un banner discreto arriba de "Hoy" con la última nota que la coach dejó
-// marcada como visible — no agrega una pestaña nueva a la navegación de
-// la clienta, solo asoma lo más reciente donde ya entra todos los días.
-async function renderCoachNoteBanner(){
-  const el=document.getElementById('coach-note-banner');
-  if(!el)return;
-  if(!PROFILE||PROFILE.is_admin){el.innerHTML='';return;}
-  const notes=await SB.get('client_notes',`profile_id=eq.${PROFILE.id}&visible_to_client=eq.true&order=created_at.desc&limit=1`);
-  const n=notes&&notes[0];
-  if(!n){el.innerHTML='';return;}
-  el.innerHTML=`<div class="dash-section" style="background:#F8F7FD;border:1px solid #E7E5EF;display:flex;align-items:flex-start;gap:10px;margin-bottom:14px">
-    <span style="font-size:18px">💬</span>
-    <div>
-      <div style="font-size:11px;font-weight:700;color:#8B8896;text-transform:uppercase">Mensaje de tu coach · ${formatDate(n.created_at.slice(0,10))}</div>
-      <div style="font-size:13px;margin-top:2px">${n.note}</div>
-    </div>
-  </div>`;
+  }).join(''):'<div class="empty-state">Sin registros de bienestar aún.</div>';
+  body.innerHTML=`${listHtml}${adminChatWidgetHtml('bienestar')}`;
+  await adminRenderChatWidget(client.id,'bienestar',firstName);
 }
 
 // Widgets de avance + score semanal, en "Hoy" del lado de la clienta.
