@@ -1116,7 +1116,16 @@ function getAutoProfileId(){
   const params=new URLSearchParams(location.search);
   const fromLink=params.get('p');
   if(fromLink){
-    history.replaceState(null,'',location.pathname);
+    // OJO: a propósito ya NO se limpia el ?p=<id> de la URL (antes se hacía
+    // con history.replaceState). Si se limpia, "Agregar a inicio" en el
+    // celular de la clienta puede guardar el ícono apuntando a la URL ya
+    // limpia (sin ?p=), y en algunos navegadores (sobre todo iPhone) el
+    // ícono de inicio no comparte el almacenamiento local con la pestaña
+    // donde entró la primera vez — así que al abrir el ícono más tarde no
+    // hay ?p= NI perfil recordado, y termina en la pantalla de "acceso
+    // restringido". Dejando el ?p= fijo en la URL, el ícono guardado
+    // siempre vuelve a llevar directo a su PIN, pase lo que pase con el
+    // almacenamiento local.
     if(ALL_PROFILES.some(p=>p.id===fromLink))return fromLink;
   }
   const remembered=LS.get(LAST_PROFILE_KEY);
