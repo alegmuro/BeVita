@@ -4703,6 +4703,11 @@ function addWeeks(mondayStr,n){const d=new Date(mondayStr+'T12:00:00');d.setDate
 // orden que EX_DAYS, así weekDatesFrom(w)[EX_DAYS.indexOf(exState.day)] da
 // la fecha real de "ese día, en esa semana".
 function weekDatesFrom(mondayStr){const out=[];for(let i=0;i<7;i++){const d=new Date(mondayStr+'T12:00:00');d.setDate(d.getDate()+i);out.push(localDateStr(d));}return out;}
+// La fecha real (YYYY-MM-DD) de "ese día (Lun..Dom), en esa semana" — un
+// solo lugar para esta cuenta, la usan tanto la vista de la clienta como
+// la de la coach (ver exRenderRealVsPlan) para que ambas miren siempre el
+// mismo día cuando navegan semana/día con exState.week/exState.day.
+function exDateForDay(week,day){return weekDatesFrom(week)[EX_DAYS.indexOf(day)];}
 const EX_MONTH_ABBR=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 function weekRangeLabel(mondayStr){
   const start=new Date(mondayStr+'T12:00:00');const end=new Date(start);end.setDate(end.getDate()+6);
@@ -4952,6 +4957,50 @@ function exWeekNavHtml(clientId){
   ${clientId?`<div style="text-align:center;margin-bottom:12px"><button class="btn-sm" onclick="exCopyWeek('${clientId}')">📋 Copiar semana anterior</button></div>`:''}`;
 }
 
+// ── COACH: "Real vs. Plan" de solo lectura ───────────────────────────
+// Antes, la pestaña Rutina de la coach solo dejaba EDITAR lo asignado —
+// para ver qué hizo la clienta de verdad tenía que ir a Historial, que es
+// una lista plana (sin comparar contra la meta, sin agrupar por ejercicio
+// del día). Esto agrega, debajo de cada ejercicio de la rutina, serie por
+// serie, lo que la clienta de verdad registró ese día — mismo "gap" que
+// ve ella en su propia pantalla (exDeltaHtml), más un resumen de volumen
+// (series × reps × peso) para ver de un vistazo si completó la carga de
+// trabajo prevista, no solo si tocó cada número individual.
+function exRenderRealVsPlan(clientId,exerciseId,date,e,ex){
+  const isDist=exIsDistance(ex);
+  if(date>today()){
+    return `<div style="font-size:11px;color:#ADAAB8;margin-top:10px;padding-top:10px;border-top:1px dashed #E7E5EF">Este día todavía no llega.</div>`;
+  }
+  const logged=exState.logs.filter(l=>l.client_id===clientId&&l.exercise_id===exerciseId&&l.date===date).sort((a,b)=>a.set_index-b.set_index);
+  if(!logged.length){
+    return `<div style="font-size:11px;color:#ADAAB8;margin-top:10px;padding-top:10px;border-top:1px dashed #E7E5EF">Sin registrar — ${date===today()?'aún no ha marcado nada hoy':'no registró nada ese día'}.</div>`;
+  }
+  const rows=logged.map(l=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0;font-size:12px">
+    <span style="color:#6B6878;flex-shrink:0">Serie ${l.set_index+1}</span>
+    <span style="font-weight:600">${isDist?`${l.distance}km · ${l.duration}min`:`${l.reps}×${l.weight}${exWeightUnit(ex)}`}</span>
+    <span style="text-align:right">${exDeltaHtml(l,e,ex)}</span>
+  </div>`).join('');
+  let gapSummary='';
+  if(!isDist){
+    const plannedTonnage=(Number(e.sets)||0)*(Number(e.reps)||0)*(Number(e.weight)||0);
+    const actualTonnage=logged.reduce((s,l)=>s+(Number(l.reps)||0)*(Number(l.weight)||0),0);
+    if(plannedTonnage>0){
+      const gapPct=Math.round((actualTonnage/plannedTonnage-1)*100);
+      const color=gapPct>=0?'#17C39B':gapPct>=-15?'#B8860B':'#DC3B3B';
+      gapSummary=`<div style="font-size:11px;font-weight:700;margin-top:6px;color:${color}">Volumen: ${Math.round(actualTonnage)}/${Math.round(plannedTonnage)}${exWeightUnit(ex)} (${gapPct>0?'+':''}${gapPct}%)</div>`;
+    }
+  }
+  const plannedSets=Number(e.sets)||0;
+  const missingSets=plannedSets-logged.length;
+  const missingNote=missingSets>0?`<div style="font-size:11px;color:#DC3B3B;margin-top:4px">Faltaron ${missingSets} de ${plannedSets} series por registrar.</div>`:'';
+  return `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed #E7E5EF">
+    <div style="font-size:10px;font-weight:700;color:#8B8896;text-transform:uppercase;margin-bottom:4px">Real — ${formatDate(date)}</div>
+    ${rows}
+    ${gapSummary}
+    ${missingNote}
+  </div>`;
+}
+
 function exRenderRutina(){
   const clientId=exState.coachClientId;
   const days=EX_DAYS.map(d=>`<button class="chart-tab${d===exState.day?' active':''}" onclick="exSelectDay('${d}')">${d}</button>`).join('');
@@ -4975,6 +5024,7 @@ function exRenderRutina(){
         <button class="btn-del" onclick="exRemoveItem('${clientId}','${exState.week}','${exState.day}','${e.exercise_id}')">×</button>
       </div>
       ${fieldsHtml}
+      ${exRenderRealVsPlan(clientId,e.exercise_id,exDateForDay(exState.week,exState.day),e,ex)}
     </div>`;
   }).join(''):`<div class="empty-state">Sin ejercicios para ${exState.day} esta semana. Agrega desde la biblioteca abajo, o copia la semana anterior.</div>`;
 
@@ -5178,11 +5228,30 @@ function exRenderWeeklyGrid(gridData,title){
   return `<div class="chart-section"><div class="chart-title">${title}</div>${header}${rows}</div>`;
 }
 function exSetBalanceMode(mode){exState.balanceMode=mode;renderExCoach();}
+// Series planeadas vs. series efectivamente registradas en la semana que
+// se está viendo (ambas ya las calcula exCalcBalance, solo hacía falta
+// cruzarlas) — un solo número de "adherencia" para ver de un vistazo si
+// la clienta está completando lo asignado, sin tener que sumar a mano la
+// cuadrícula de abajo. "Real" cuenta TODO lo registrado, incluidas series
+// sueltas no asignadas — por eso puede pasar de 100% si hizo de más.
+function exCalcAdherence(clientId){
+  const planned=exCalcBalance(clientId,'planned').total;
+  const real=exCalcBalance(clientId,'real').total;
+  const pct=planned?Math.round(real/planned*100):null;
+  return{planned,real,pct};
+}
 function exRenderBalance(){
   const clientId=exState.coachClientId;
   const mode=exState.balanceMode;
   const isReal=mode==='real';
   const b=exCalcBalance(clientId,mode);
+  const adh=exCalcAdherence(clientId);
+  const adhColor=adh.pct==null?'#8B8896':adh.pct>=90?'#17C39B':adh.pct>=70?'#B8860B':'#DC3B3B';
+  const adherenceHtml=`<div class="today-card" style="cursor:default;margin-bottom:14px">
+    <div class="today-card-title">Series completadas esta semana</div>
+    <div class="today-card-val" style="color:${adhColor}">${adh.real}<span style="font-size:12px;color:#ADAAB8">/${adh.planned||0} planeadas</span></div>
+    <div class="today-card-sub">${adh.pct==null?'Sin ejercicios asignados esta semana':adh.pct+'% de adherencia'}</div>
+  </div>`;
   const modeToggle=`<div class="chart-tabs" style="margin-bottom:10px">
     <button class="chart-tab${!isReal?' active':''}" onclick="exSetBalanceMode('planned')">Planificado</button>
     <button class="chart-tab${isReal?' active':''}" onclick="exSetBalanceMode('real')">Real (completado)</button>
@@ -5203,6 +5272,7 @@ function exRenderBalance(){
     ?'Volumen real completado la semana del '+weekRangeLabel(exState.week)+' por grupo muscular'
     :'Planificación de la semana del '+weekRangeLabel(exState.week)+' por grupo muscular';
   return `<div class="dash-section">${exWeekNavHtml(null)}</div>`+
+    adherenceHtml+
     `<div class="dash-section">${modeToggle}</div>`+
     exRenderWeeklyGrid(exCalcWeeklyGrid(clientId,mode),gridTitle)+
     `<div class="dash-section"><div class="dash-section-title">Distribución total de la semana${isReal?' (real)':''}</div>${rows}</div>`+warning;
@@ -5292,48 +5362,53 @@ function exRenderEntreno(){
     const loggedForEx=exState.logs.filter(l=>l.client_id===clientId&&l.exercise_id===e.exercise_id&&l.date===t);
     const maxLoggedIndex=loggedForEx.length?Math.max(...loggedForEx.map(l=>l.set_index)):-1;
     const totalSets=Math.max(Number(e.sets)||0,maxLoggedIndex+1);
-    let setsHtml=isDist?`<div style="display:grid;grid-template-columns:36px 1fr 1fr 40px;gap:8px;padding:0 2px;margin-bottom:6px">
+    const exGridCols='26px 1fr 1fr 1fr 1fr 34px';
+    let setsHtml=isDist?`<div style="display:grid;grid-template-columns:${exGridCols};gap:4px;padding:0 2px">
+        <span></span>
+        <span style="font-size:8.5px;color:#ADAAB8;text-align:center;grid-column:span 2;font-weight:700;letter-spacing:.3px">SUGERIDO</span>
+        <span style="font-size:8.5px;color:#4B3FBF;text-align:center;grid-column:span 2;font-weight:700;letter-spacing:.3px">REAL</span>
+        <span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:${exGridCols};gap:4px;padding:0 2px;margin-bottom:6px">
         <span style="font-size:10px;color:#ADAAB8">Sesión</span>
-        <span style="font-size:10px;color:#ADAAB8">Km</span>
-        <span style="font-size:10px;color:#ADAAB8">Min</span>
+        <span style="font-size:10px;color:#ADAAB8;text-align:center">Km</span>
+        <span style="font-size:10px;color:#ADAAB8;text-align:center">Min</span>
+        <span style="font-size:10px;color:#4B3FBF;text-align:center">Km</span>
+        <span style="font-size:10px;color:#4B3FBF;text-align:center">Min</span>
         <span style="font-size:10px;color:#ADAAB8;text-align:center">✓</span>
-      </div>`:`<div style="display:grid;grid-template-columns:36px 1fr 1fr 40px;gap:8px;padding:0 2px;margin-bottom:6px">
+      </div>`:`<div style="display:grid;grid-template-columns:${exGridCols};gap:4px;padding:0 2px">
+        <span></span>
+        <span style="font-size:8.5px;color:#ADAAB8;text-align:center;grid-column:span 2;font-weight:700;letter-spacing:.3px">SUGERIDO</span>
+        <span style="font-size:8.5px;color:#4B3FBF;text-align:center;grid-column:span 2;font-weight:700;letter-spacing:.3px">REAL</span>
+        <span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:${exGridCols};gap:4px;padding:0 2px;margin-bottom:6px">
         <span style="font-size:10px;color:#ADAAB8">Serie</span>
-        <span style="font-size:10px;color:#ADAAB8">Reps</span>
-        <span style="font-size:10px;color:#ADAAB8">${exWeightUnit(ex).toUpperCase()}</span>
+        <span style="font-size:10px;color:#ADAAB8;text-align:center">Reps</span>
+        <span style="font-size:10px;color:#ADAAB8;text-align:center">${exWeightUnit(ex).toUpperCase()}</span>
+        <span style="font-size:10px;color:#4B3FBF;text-align:center">Reps</span>
+        <span style="font-size:10px;color:#4B3FBF;text-align:center">${exWeightUnit(ex).toUpperCase()}</span>
         <span style="font-size:10px;color:#ADAAB8;text-align:center">✓</span>
       </div>`;
     for(let i=0;i<totalSets;i++){
       const logged=exFindLog(clientId,e.exercise_id,t,i);
       const done=!!logged;
-      let delta;
+      const delta=e.adHoc?'':exDeltaHtml(logged,e,ex);
       if(isDist){
-        if(e.adHoc){
-          delta='';
-        }else if(done){
-          const dd=Math.round((Number(logged.distance)-Number(e.distance))*100)/100;
-          delta=dd===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dd>0?'#17C39B':'#DC3B3B'}">${dd>0?'+':''}${dd}km</span>`;
-        }else{
-          delta=`<span style="font-size:11px;color:#ADAAB8">meta ${e.distance}km</span>`;
-        }
-        setsHtml+=`<div style="display:grid;grid-template-columns:36px 1fr 1fr 40px;gap:8px;align-items:center;margin-bottom:2px">
+        setsHtml+=`<div style="display:grid;grid-template-columns:${exGridCols};gap:4px;align-items:center;margin-bottom:2px">
           <span style="font-size:13px;font-weight:600;color:#4B3FBF;text-align:center">${i+1}</span>
+          <span style="font-size:13px;text-align:center;color:#8B8896">${e.distance}</span>
+          <span style="font-size:13px;text-align:center;color:#8B8896">${e.duration}</span>
           <input type="number" step="0.1" min="0" class="ex-input" style="width:100%" ${done?'':'disabled'} value="${logged?logged.distance:e.distance}" oninput="exSetLogDistance('${clientId}','${e.exercise_id}','${t}',${i},this.value)">
           <input type="number" step="1" min="0" class="ex-input" style="width:100%" ${done?'':'disabled'} value="${logged?logged.duration:e.duration}" oninput="exSetLogDuration('${clientId}','${e.exercise_id}','${t}',${i},this.value)">
           <button class="ex-check-btn${done?' done':''}" title="${done?'Marcar como no completada':'Marcar como completada'}" onclick="exToggleSet('${clientId}','${e.exercise_id}','${t}',${i},${e.weight},${e.reps},${e.distance},${e.duration})">✓</button>
         </div>
         <div style="text-align:right;font-size:11px;margin:-2px 0 8px" id="ex-delta-${clientId}-${e.exercise_id}-${t}-${i}">${delta}</div>`;
       }else{
-        if(e.adHoc){
-          delta='';
-        }else if(done){
-          const dw=Math.round((Number(logged.weight)-Number(e.weight))*10)/10;
-          delta=dw===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dw>0?'#17C39B':'#DC3B3B'}">${dw>0?'+':''}${dw}${exWeightUnit(ex)}</span>`;
-        }else{
-          delta=`<span style="font-size:11px;color:#ADAAB8">meta ${e.reps}×${e.weight}${exWeightUnit(ex)}</span>`;
-        }
-        setsHtml+=`<div style="display:grid;grid-template-columns:36px 1fr 1fr 40px;gap:8px;align-items:center;margin-bottom:2px">
+        setsHtml+=`<div style="display:grid;grid-template-columns:${exGridCols};gap:4px;align-items:center;margin-bottom:2px">
           <span style="font-size:13px;font-weight:600;color:#4B3FBF;text-align:center">${i+1}</span>
+          <span style="font-size:13px;text-align:center;color:#8B8896">${e.reps}</span>
+          <span style="font-size:13px;text-align:center;color:#8B8896">${e.weight}</span>
           <input type="number" step="1" min="0" class="ex-input" style="width:100%" ${done?'':'disabled'} value="${logged?logged.reps:e.reps}" oninput="exSetLogReps('${clientId}','${e.exercise_id}','${t}',${i},this.value)">
           <input type="number" step="0.5" min="0" class="ex-input" style="width:100%" ${done?'':'disabled'} value="${logged?logged.weight:e.weight}" oninput="exSetLogWeight('${clientId}','${e.exercise_id}','${t}',${i},this.value)">
           <button class="ex-check-btn${done?' done':''}" title="${done?'Marcar como no completada':'Marcar como completada'}" onclick="exToggleSet('${clientId}','${e.exercise_id}','${t}',${i},${e.weight},${e.reps},${e.distance},${e.duration})">✓</button>
@@ -5406,6 +5481,7 @@ function exSetLogWeight(clientId,exerciseId,date,setIndex,value){
 function exSetLogReps(clientId,exerciseId,date,setIndex,value){
   const l=exFindLog(clientId,exerciseId,date,setIndex);if(!l)return;
   const r=parseFloat(value)||0;l.reps=r;
+  exUpdateDelta(clientId,exerciseId,date,setIndex);
   const key='lr|'+clientId+'|'+exerciseId+'|'+date+'|'+setIndex;
   clearTimeout(exFieldTimers[key]);
   exFieldTimers[key]=setTimeout(()=>{
@@ -5431,6 +5507,27 @@ function exSetLogDuration(clientId,exerciseId,date,setIndex,value){
     SB.patch('workout_logs',`client_id=eq.${clientId}&exercise_id=eq.${exerciseId}&date=eq.${date}&set_index=eq.${setIndex}`,{duration:d});
   },500);
 }
+// Compara lo logrado (reps+peso, o distancia) contra lo asignado y arma
+// el texto del "gap" (verde = más de lo pedido, rojo = menos) — un solo
+// lugar para el cálculo, así la tarjeta de la clienta y la vista de solo
+// lectura de la coach (ver exRenderRealVsPlan) siempre coinciden. Antes
+// esto vivía repetido dos veces (acá y en exRenderEntreno) y solo
+// comparaba el PESO — los reps nunca mostraban gap, aunque la clienta
+// hiciera 6 en vez de 10.
+function exDeltaHtml(logged,target,ex){
+  if(!logged)return exIsDistance(ex)?`<span style="font-size:11px;color:#ADAAB8">meta ${target.distance}km</span>`:`<span style="font-size:11px;color:#ADAAB8">meta ${target.reps}×${target.weight}${exWeightUnit(ex)}</span>`;
+  if(exIsDistance(ex)){
+    const dd=Math.round((Number(logged.distance)-Number(target.distance))*100)/100;
+    return dd===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dd>0?'#17C39B':'#DC3B3B'}">${dd>0?'+':''}${dd}km</span>`;
+  }
+  const dr=Math.round(Number(logged.reps)-Number(target.reps));
+  const dw=Math.round((Number(logged.weight)-Number(target.weight))*10)/10;
+  if(dr===0&&dw===0)return'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>';
+  const parts=[];
+  if(dr!==0)parts.push(`<span style="color:${dr>0?'#17C39B':'#DC3B3B'}">${dr>0?'+':''}${dr} reps</span>`);
+  if(dw!==0)parts.push(`<span style="color:${dw>0?'#17C39B':'#DC3B3B'}">${dw>0?'+':''}${dw}${exWeightUnit(ex)}</span>`);
+  return `<span style="font-size:11px;font-weight:600">${parts.join(' · ')}</span>`;
+}
 // Refresca solo el texto "= objetivo / +X / -X" de una serie sin
 // re-renderizar toda la tarjeta (evita perder el foco mientras se escribe).
 function exUpdateDelta(clientId,exerciseId,date,setIndex){
@@ -5440,15 +5537,7 @@ function exUpdateDelta(clientId,exerciseId,date,setIndex){
   const el=document.getElementById(`ex-delta-${clientId}-${exerciseId}-${date}-${setIndex}`);
   if(!e||!el)return;
   const logged=exFindLog(clientId,exerciseId,date,setIndex);
-  if(exIsDistance(ex)){
-    if(!logged){el.innerHTML=`<span style="font-size:11px;color:#ADAAB8">meta ${e.distance}km</span>`;return;}
-    const dd=Math.round((Number(logged.distance)-Number(e.distance))*100)/100;
-    el.innerHTML=dd===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dd>0?'#17C39B':'#DC3B3B'}">${dd>0?'+':''}${dd}km</span>`;
-    return;
-  }
-  if(!logged){el.innerHTML=`<span style="font-size:11px;color:#ADAAB8">meta ${e.reps}×${e.weight}${exWeightUnit(ex)}</span>`;return;}
-  const dw=Math.round((Number(logged.weight)-Number(e.weight))*10)/10;
-  el.innerHTML=dw===0?'<span style="font-size:11px;color:#ADAAB8">= objetivo</span>':`<span style="font-size:11px;font-weight:600;color:${dw>0?'#17C39B':'#DC3B3B'}">${dw>0?'+':''}${dw}${exWeightUnit(ex)}</span>`;
+  el.innerHTML=exDeltaHtml(logged,e,ex);
 }
 
 // Últimas n semanas (lunes a domingo), de la más antigua a la más reciente.
